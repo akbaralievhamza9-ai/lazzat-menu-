@@ -125,7 +125,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <div class="logo-s">Кыргыз улуттук тамактары</div>
       </div>
     </div>
-    <button class="gear" onclick="openAdm()">⚙️ Изменить</button>
+    <button class="gear" id="gearBtn" style="display:none" onclick="openAdm()">⚙️ Изменить</button>
   </div>
 </div>
 <div class="orn"></div>
@@ -172,11 +172,52 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   <div class="img-edit-box">
     <div class="img-edit-title" id="imgEditTitle">Сүрөт өзгөртүү</div>
     <img class="img-preview" id="imgPreview" src="">
-    <div class="flbl">Жаңы сүрөт URL жазыңыз:</div>
+    
+    <div class="flbl">Телефондон сүрөт тандаңыз:</div>
+    <input class="finp" id="imgFileInput" type="file" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'imgUrlInp', 'imgPreview')">
+    <button onclick="document.getElementById('imgFileInput').click()" style="width:100%;padding:10px;background:var(--brown);color:var(--gold2);border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:'Nunito',sans-serif">📁 Галереядан тандоо</button>
+    
+    <div class="flbl">Же сүрөт шилтемесин жазыңыз:</div>
     <input class="finp" id="imgUrlInp" type="url" placeholder="https://...jpg" style="margin-bottom:10px">
+    
     <div style="display:flex;gap:8px">
       <button onclick="applyImg()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">✅ Сактоо</button>
       <button onclick="cls2('imgEditOv')" style="flex:1;padding:10px;background:#e8dcc8;color:var(--brown);border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Жок</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT / CASSA -->
+<div class="ov" id="payOv" onclick="bgc(event,'payOv')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="shdr"><div class="stit">💵 Төлөм жана Касса</div><button class="scl" onclick="cls('payOv')">✕</button></div>
+    <div style="padding:15px 18px; text-align:center">
+      <div style="font-size:13px; color:var(--brown); font-weight:700; margin-bottom:12px; line-height:1.4">
+        🇰🇬 Буюртманы кабыл алуу үчүн төлөмдү МБАНК аркылуу которуңуз:<br>
+        🇷🇺 Для подтверждения заказа переведите оплату через МБАНК:
+      </div>
+      
+      <!-- MBANK DETAILS CARD -->
+      <div style="background:#ede4d3; border:1.5px solid var(--border); border-radius:12px; padding:15px; margin-bottom:15px">
+        <div style="font-size:11px; font-weight:800; color:var(--brown2); text-transform:uppercase; letter-spacing:0.5px">📲 МБАНК Номер / Карта:</div>
+        <div style="font-size:18px; font-weight:900; color:var(--brown); margin:5px 0; letter-spacing:0.5px">+996 778 993 375</div>
+        <div style="font-size:13px; font-weight:800; color:var(--gold)">Руслан Т.</div>
+      </div>
+      
+      <!-- QR CODE -->
+      <div style="font-size:11px; font-weight:800; color:var(--gray); margin-bottom:8px">📸 QR-код аркылуу төлөө:</div>
+      <div style="display:flex; justify-content:center; margin-bottom:15px">
+        <div style="background:#fff; border:1.5px solid var(--border); padding:10px; border-radius:12px">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://lazzat.kg/pay" style="width:150px; height:150px; display:block" onerror="this.style.display='none'">
+        </div>
+      </div>
+      
+      <div style="font-size:12px; color:var(--red); font-weight:800; margin-bottom:15px; line-height:1.4">
+        ⚠️ Которгондон кийин гана "Төлөдүм" баскычын басыңыз!<br>
+        ⚠️ Нажимайте кнопку только после перевода денег!
+      </div>
+      
+      <button class="cfbtn" id="confirmPayBtn" onclick="doOrder()" style="width:100%; margin:0">✅ Төлөдүм / Оплатил</button>
     </div>
   </div>
 </div>
@@ -521,24 +562,138 @@ function rCartBody(){
     <div class="flbl">📞 Телефон</div>
     <input class="finp" id="iphone" type="tel" placeholder="+996 700 000 000">
   </div>
-  <button class="cfbtn" id="orderBtn" onclick="doOrder()">✅ Буюртманы Тастыктоо</button>`;
+  <button class="cfbtn" id="orderBtn" onclick="openPayment()">✅ Буюртманы Тастыктоо</button>`;
 }
 function cAdd(id){add(id);rCartBody();}
 function cRem(id){rem(id);rCartBody();}
+
+// 🌐 API URL ЖАНА АДМИН ТЕКШЕРҮҮ
+let API_URL = new URLSearchParams(window.location.search).get('api') || '';
+if (API_URL && API_URL.endsWith('/')) {
+  API_URL = API_URL.slice(0, -1);
+}
+
+function checkAdminAccess(){
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdmin = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && String(tg.initDataUnsafe.user.id) === String(ADMIN_ID)) 
+                  || urlParams.get('admin') === 'true';
+  if(isAdmin){
+    const gear = document.getElementById('gearBtn');
+    if(gear) gear.style.display = 'block';
+  }
+}
+
+async function loadMenu() {
+  if (!API_URL) return;
+  try {
+    const res = await fetch(`${API_URL}/api/menu`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        M = data;
+      }
+    }
+  } catch(e) {
+    console.error('Failed to load menu from API:', e);
+  }
+}
+
+async function saveMenuToServer() {
+  if (!API_URL) {
+    toast('💾 Жергиликтүү сакталды');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/api/menu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(M)
+    });
+    if (res.ok) {
+      toast('💾 Сакталды жана камдык көчүрмөсү жөнөтүлдү!');
+    } else {
+      toast('⚠️ Серверге сактоодо ката кетти');
+    }
+  } catch(e) {
+    console.error('Error saving menu:', e);
+    toast('⚠️ Сакталган жок, байланышты текшериңиз');
+  }
+}
+
+// 📸 ГАЛЕРЕЯДАН СҮРӨТ ЖҮКТӨӨ ЖАНА КЫСУУ
+function handleFileSelect(input, targetInpId, previewImgId) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  toast('⏳ Сүрөт иштетилип жатат...');
+  compressImage(file, function(dataUrl) {
+    document.getElementById(targetInpId).value = dataUrl;
+    const preview = document.getElementById(previewImgId);
+    if (preview) {
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+    }
+    toast('✅ Сүрөт кошулду!');
+  });
+}
+
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 400;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // JPEG форматында 70% сапатта кысабыз
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      callback(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CART & PAYMENT FLOW ──
+function openPayment() {
+  const name=(document.getElementById('iname').value||'').trim();
+  const phone=(document.getElementById('iphone').value||'').trim();
+  if(!name){toast('⚠️ Атыңызды жазыңыз!');return;}
+  if(!phone){toast('⚠️ Телефонду жазыңыз!');return;}
+  
+  cls('cartOv');
+  show('payOv');
+}
 
 // ── ORDER → TELEGRAM ──
 async function doOrder(){
   const name=(document.getElementById('iname').value||'').trim();
   const phone=(document.getElementById('iphone').value||'').trim();
-  if(!name){toast('⚠️ Атыңызды жазыңыз!');return;}
-  if(!phone){toast('⚠️ Телефонду жазыңыз!');return;}
   const items=cItems(), total=cTotal();
-  const btn=document.getElementById('orderBtn');
+  const btn=document.getElementById('confirmPayBtn');
   if(btn){btn.disabled=true;btn.textContent='⏳ Жөнөтүлүүдө...';}
 
-  const orderData={name,phone,items:items.map(i=>({name:i.n,price:i.p,qty:i.qty})),total};
+  const orderData={
+    name,
+    phone,
+    items:items.map(i=>({name:i.n,price:i.p,qty:i.qty})),
+    total,
+    payment: 'MBANK (Руслан Т.)'
+  };
 
-  // 1: Telegram sendData
+  // 1: Telegram sendData (Mini App аркылуу)
   if(tg && tg.sendData){
     try{ tg.sendData(JSON.stringify(orderData)); onSuccess(); return; }catch(e){}
   }
@@ -550,7 +705,8 @@ async function doOrder(){
   msg+=`━━━━━━━━━━━━━━━━━━━━\n📦 *БУЮРТМАЛАР:*\n`;
   items.forEach(i=>{msg+=`  • ${i.n} × ${i.qty} = *${i.p*i.qty} сом*\n`;});
   msg+=`━━━━━━━━━━━━━━━━━━━━\n💵 *ЖАЛПЫ: ${total} сом*\n`;
-  msg+=`🕐 ${new Date().toLocaleString('ru-RU',{timeZone:'Asia/Bishkek'})}`;
+  msg+=`💳 *Төлөм:* МБАНК аркылуу которулду\n`;
+  msg+=`━━━━━━━━━━━━━━━━━━━━\n🕐 ${new Date().toLocaleString('ru-RU',{timeZone:'Asia/Bishkek'})}`;
 
   try{
     const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
@@ -558,16 +714,18 @@ async function doOrder(){
       body:JSON.stringify({chat_id:ADMIN_ID,text:msg,parse_mode:'Markdown'})
     });
     const d=await r.json();
-    if(d.ok){onSuccess();}else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Буюртманы Тастыктоо';}}
+    if(d.ok){onSuccess();}else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}}
   }catch(e){
     toast('⚠️ Интернет байланышы жок!');
-    if(btn){btn.disabled=false;btn.textContent='✅ Буюртманы Тастыктоо';}
+    if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}
   }
 }
 function onSuccess(){
-  cart={};syncBar();cls('cartOv');rMenu();
-  toast('🎉 Буюртма жөнөтүлдү!');
-  if(tg) setTimeout(()=>tg.close(),1500);
+  cart={};syncBar();
+  cls('payOv');
+  rMenu();
+  toast('🎉 Буюртмаңыз кабыл алынды! Рахмат!');
+  if(tg) setTimeout(()=>tg.close(),1800);
 }
 
 // ── ADMIN ──
@@ -611,7 +769,13 @@ function rAdmBody(){
       <input class="finp" id="aprice" type="number" placeholder="Баасы (сом)">
       <select class="finp" id="acat">${CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.l}</option>`).join('')}</select>
     </div>
-    <input class="finp" id="aimg" placeholder="Сүрөт URL (милдеттүү эмес)" style="margin-bottom:6px">
+    
+    <div class="flbl">Тамактын сүрөтү:</div>
+    <input class="finp" id="newImgFileInput" type="file" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'aimg', 'newImgPreview')">
+    <button onclick="document.getElementById('newImgFileInput').click()" style="width:100%;padding:10px;background:#ede4d3;color:var(--brown);border:1.5px solid var(--border);border-radius:10px;font-weight:800;cursor:pointer;margin-bottom:8px;font-family:'Nunito',sans-serif">📁 Галереядан сүрөт тандоо</button>
+    <img id="newImgPreview" src="" style="width:100%;height:100px;object-fit:cover;border-radius:8px;display:none;margin-bottom:8px;background:#ede4d3">
+    
+    <input class="finp" id="aimg" placeholder="Же сүрөт шилтемесин жазыңыз..." style="margin-bottom:6px">
     <button class="addbtn" onclick="addNew()">➕ Менюга Кошуу</button>
   </div>`;
   document.getElementById('admBody').innerHTML=h;
@@ -622,14 +786,19 @@ function tog(id){
   i.a=!i.a;
   const b=document.getElementById(`t${id}`);
   if(b){b.className=`tb ${i.a?'on':'off'}`;b.textContent=i.a?'🟢 Бар':'🔴 Стоп';}
-  rMenu();toast(i.a?`✅ ${i.n} — менюда`:`🔴 ${i.n} — стоп`);
+  rMenu();
+  toast(i.a?`✅ ${i.n} — менюда`:`🔴 ${i.n} — стоп`);
+  saveMenuToServer();
 }
 function svP(id){
   if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
   const i=M.find(x=>x.id===id);if(!i)return;
   const v=parseInt(document.getElementById(`p${id}`).value);
   if(isNaN(v)||v<0){toast('⚠️ Туура сан!');return;}
-  i.p=v;rMenu();toast(`💾 ${i.n} — ${v} сом`);
+  i.p=v;
+  rMenu();
+  toast(`💾 ${i.n} — ${v} сом`);
+  saveMenuToServer();
 }
 function addNew(){
   if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
@@ -642,7 +811,10 @@ function addNew(){
   if(isNaN(p)||p<=0){toast('⚠️ Баасын жазыңыз!');return;}
   const cl=CATS.find(c=>c.id===cat)?.l||cat;
   M.push({id:Date.now(),cat,cl,n,note,p,img:imgUrl||FB,a:true});
-  rMenu();rAdmBody();toast(`✅ ${n} кошулду!`);
+  rMenu();
+  rAdmBody();
+  toast(`✅ ${n} кошулду!`);
+  saveMenuToServer();
 }
 // Сүрөт өзгөртүү
 function editImg(id){
@@ -665,6 +837,7 @@ function applyImg(){
     if(el)el.src=url;
     rMenu();
     toast('✅ Сүрөт өзгөрдү!');
+    saveMenuToServer();
   }
   cls2('imgEditOv');editingImgId=null;
 }
@@ -679,6 +852,13 @@ function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+async function init(){
+  await loadMenu();
+  rCats();
+  rMenu();
+  checkAdminAccess();
 }
 
 init();
