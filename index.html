@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Лаззат Беш Бармак</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#f5f0e6;--card:#fffdf8;--gold:#c9922a;--gold2:#e8b84b;
+  --brown:#5c3d1e;--brown2:#8b6344;--green:#2d6a4f;
+  --text:#2c1a0e;--gray:#a08060;--border:#d4b896;
+  --red:#c0392b;--sh:rgba(92,61,30,.13);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:86px}
+.hdr{background:linear-gradient(135deg,#5c3d1e,#3a2010);padding:11px 13px 9px;position:sticky;top:0;z-index:100;box-shadow:0 3px 14px rgba(0,0,0,.3)}
+.hdr-r{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-ic{font-size:24px}
+.logo-t{font-family:'Playfair Display',serif;color:var(--gold2);font-size:15px;line-height:1.2}
+.logo-s{font-size:9px;color:#c8a87a;letter-spacing:1px;text-transform:uppercase}
+.gear{background:rgba(255,255,255,.1);border:1px solid rgba(201,146,42,.4);border-radius:9px;color:var(--gold2);font-size:11px;font-weight:800;padding:6px 10px;cursor:pointer;font-family:'Nunito',sans-serif}
+.gear:active{background:rgba(255,255,255,.22)}
+.orn{height:6px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 5px,transparent 5px,transparent 9px,var(--gold2) 9px,var(--gold2) 13px,transparent 13px,transparent 17px);opacity:.6}
+.cats{overflow-x:auto;display:flex;gap:6px;padding:9px 13px;background:#ede4d3;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex-shrink:0;background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;font-size:11px;font-weight:800;color:var(--brown2);cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;transition:.15s}
+.cat.on{background:var(--brown);border-color:var(--brown);color:var(--gold2)}
+.cat:active{transform:scale(.93)}
+.sec-t{font-family:'Playfair Display',serif;font-size:17px;color:var(--brown);padding:13px 13px 5px;display:flex;align-items:center;gap:7px}
+.sec-t::after{content:'';flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 4px,transparent 4px,transparent 8px)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 10px 6px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px var(--sh);border:1px solid var(--border);position:relative}
+.card.stop{opacity:.4}
+.card img{width:100%;height:108px;object-fit:cover;display:block;background:#ede4d3}
+.cbody{padding:7px 7px 8px}
+.cname{font-weight:800;font-size:11px;color:var(--text);line-height:1.3;margin-bottom:2px;min-height:27px}
+.cnote{font-size:9px;color:var(--gray);margin-bottom:3px}
+.cprice{font-family:'Playfair Display',serif;font-size:13px;color:var(--brown);margin-bottom:5px}
+.add-btn{width:100%;padding:6px;background:var(--brown);color:var(--gold2);border:none;border-radius:7px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+.add-btn:active{background:#3a2010}
+.add-btn:disabled{opacity:.35;cursor:not-allowed}
+.qty-r{display:flex;align-items:center;justify-content:space-between}
+.qb{width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.qb.m{background:#f0e8d6;color:var(--brown2)}
+.qb.p{background:var(--brown);color:var(--gold2)}
+.qb:active{transform:scale(.86)}
+.qn{font-size:13px;font-weight:800;min-width:17px;text-align:center;color:var(--brown)}
+.stbadge{position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:8px;font-weight:900;padding:2px 5px;border-radius:20px}
+.newbadge{position:absolute;top:6px;left:6px;background:var(--green);color:#fff;font-size:8px;font-weight:900;padding:2px 5px;border-radius:20px}
+.cbar{position:fixed;bottom:0;left:0;right:0;padding:8px 13px;background:linear-gradient(0deg,var(--bg) 80%,transparent);z-index:200}
+.cbtn{width:100%;background:linear-gradient(135deg,var(--brown),#3a2010);color:var(--gold2);border:none;border-radius:14px;padding:13px 16px;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 4px 16px rgba(92,61,30,.4);font-family:'Nunito',sans-serif}
+.cbtn:active{transform:scale(.98)}
+.cbl{display:flex;align-items:center;gap:8px}
+.cbn{background:var(--gold2);color:var(--brown);border-radius:50%;width:24px;height:24px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300}
+.ov.show{display:flex;align-items:flex-end}
+.sheet{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:0 0 26px;animation:sup .27s ease}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0}
+.shdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px 7px}
+.stit{font-family:'Playfair Display',serif;font-size:18px;color:var(--brown)}
+.scl{width:29px;height:29px;background:#e8dcc8;border:none;border-radius:50%;font-size:16px;cursor:pointer;color:var(--brown);display:flex;align-items:center;justify-content:center}
+.ci{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid #ede4d3}
+.ci img{width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#ede4d3}
+.cii{flex:1}
+.cin{font-size:12px;font-weight:800;color:var(--text)}
+.cip{font-size:11px;color:var(--brown);font-weight:700;margin-top:2px}
+.ciq{display:flex;align-items:center;gap:5px}
+.cempty{text-align:center;padding:34px 20px;color:var(--gray);font-size:13px}
+.ctot{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:#ede4d3;margin:5px 13px;border-radius:10px}
+.ctl{font-size:12px;color:var(--gray)}
+.ctv{font-family:'Playfair Display',serif;font-size:18px;color:var(--brown);font-weight:700}
+.fsec{padding:5px 13px}
+.flbl{font-size:11px;font-weight:800;color:var(--brown2);margin-bottom:4px}
+.finp{width:100%;padding:10px 12px;background:#fff;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);font-family:'Nunito',sans-serif;margin-bottom:8px;outline:none}
+.finp:focus{border-color:var(--brown)}
+.cfbtn{width:calc(100% - 26px);margin:5px 13px 0;background:linear-gradient(135deg,var(--green),#1b4332);color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(45,106,79,.3)}
+.cfbtn:active{transform:scale(.97)}
+.cfbtn:disabled{opacity:.55}
+/* ADMIN */
+.adm-pin{padding:12px 16px;background:#ede4d3;border-bottom:2px solid var(--border)}
+.adm-pin-t{font-size:12px;color:var(--brown2);font-weight:800;margin-bottom:6px}
+.adm-pin-row{display:flex;gap:8px}
+.adm-pin-inp{flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:'Nunito',sans-serif;outline:none;letter-spacing:4px;text-align:center}
+.adm-pin-btn{padding:9px 16px;background:var(--brown);color:var(--gold2);border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+.adm-locked{text-align:center;padding:40px 20px;color:var(--gray)}
+.acat{font-size:10px;font-weight:900;color:var(--gold2);background:var(--brown);padding:5px 13px;letter-spacing:1px;text-transform:uppercase}
+.ait{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid #ede4d3}
+.aimg-wrap{position:relative;flex-shrink:0}
+.aimg{width:50px;height:50px;border-radius:8px;object-fit:cover;background:#ede4d3;display:block}
+.aimg-edit{position:absolute;bottom:0;right:0;background:var(--brown);color:var(--gold2);border:none;border-radius:4px;font-size:9px;padding:1px 3px;cursor:pointer}
+.ainf{flex:1;min-width:0}
+.an{font-size:11px;font-weight:800;color:var(--text);margin-bottom:3px}
+.ar{display:flex;align-items:center;gap:5px}
+.ainp{width:72px;padding:4px 7px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;color:var(--brown);font-family:'Nunito',sans-serif;text-align:center;outline:none}
+.asv{padding:4px 8px;background:var(--gold);border:none;border-radius:7px;font-size:10px;font-weight:800;cursor:pointer;color:var(--brown);font-family:'Nunito',sans-serif}
+.tb{flex-shrink:0;padding:5px 8px;border-radius:7px;border:none;font-size:10px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif}
+.tb.on{background:#d4edda;color:#1b6a35}
+.tb.off{background:#fde8e8;color:var(--red)}
+.addsec{padding:11px 13px}
+.addtit{font-family:'Playfair Display',serif;font-size:14px;color:var(--brown);margin-bottom:9px;padding-bottom:5px;border-bottom:2px solid var(--border)}
+.addrow{display:flex;gap:6px;margin-bottom:6px}
+.addrow .finp{margin-bottom:0;flex:1}
+.addbtn{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+.img-edit-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.img-edit-ov.show{display:flex}
+.img-edit-box{background:#fff;border-radius:16px;padding:20px;width:90%;max-width:360px}
+.img-edit-title{font-weight:800;font-size:15px;color:var(--brown);margin-bottom:12px}
+.img-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#ede4d3}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--brown);color:var(--gold2);padding:8px 18px;border-radius:20px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:600;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.22)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-r">
+    <div class="logo">
+      <div class="logo-ic">🏔</div>
+      <div>
+        <div class="logo-t">Лаззат Беш Бармак</div>
+        <div class="logo-s">Кыргыз улуттук тамактары</div>
+      </div>
+    </div>
+    <button class="gear" onclick="openAdm()">⚙️ Изменить</button>
+  </div>
+</div>
+<div class="orn"></div>
+<div style="background:var(--brown); color:var(--gold2); font-size:10px; font-weight:800; padding:6px 12px; display:flex; justify-content:space-between; border-bottom:1.5px solid var(--border)">
+  <span>⏱ Даярдоо: 15-25 мүнөт</span>
+  <span>🚖 Жеткирүү: 30-55 мүнөт</span>
+</div>
+<div class="cats" id="catBar"></div>
+<div id="menuWrap"></div>
+
+<div class="cbar">
+  <button class="cbtn" id="cartBtn" style="display:none" onclick="openCart()">
+    <div class="cbl"><div class="cbn" id="cCnt">0</div><span>🛒 Себет / Корзина</span></div>
+    <span id="cTot">0 сом</span>
+  </button>
+</div>
+
+<!-- CART -->
+<div class="ov" id="cartOv" onclick="bgc(event,'cartOv')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="shdr"><div class="stit">🛒 Себет</div><button class="scl" onclick="cls('cartOv')">✕</button></div>
+    <div id="cartBody"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="ov" id="admOv" onclick="bgc(event,'admOv')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="shdr"><div class="stit">⚙️ Башкаруу</div><button class="scl" onclick="cls('admOv')">✕</button></div>
+    <!-- PIN талаасы -->
+    <div class="adm-pin">
+      <div class="adm-pin-t">🔐 Администратор PIN коду:</div>
+      <div class="adm-pin-row">
+        <input class="adm-pin-inp" id="pinInp" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+        <button class="adm-pin-btn" onclick="checkPin()">Кирүү</button>
+      </div>
+    </div>
+    <div id="admBody"><div class="adm-locked">🔒 PIN код киргизиңиз</div></div>
+  </div>
+</div>
+
+<!-- СҮРӨТ ӨЗГӨРТҮҮ -->
+<div class="img-edit-ov" id="imgEditOv">
+  <div class="img-edit-box">
+    <div class="img-edit-title" id="imgEditTitle">Сүрөт өзгөртүү</div>
+    <img class="img-preview" id="imgPreview" src="">
+    <div class="flbl">Жаңы сүрөт URL жазыңыз:</div>
+    <input class="finp" id="imgUrlInp" type="url" placeholder="https://...jpg" style="margin-bottom:10px">
+    <div style="display:flex;gap:8px">
+      <button onclick="applyImg()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">✅ Сактоо</button>
+      <button onclick="cls2('imgEditOv')" style="flex:1;padding:10px;background:#e8dcc8;color:var(--brown);border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Жок</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+//  TELEGRAM
+// ═══════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if(tg){ tg.expand(); tg.enableClosingConfirmation(); }
+
+const BOT_TOKEN = '8826341236:AAEglwZ4U-Neam7q5RWhWlCJFoi8ykkccn0';
+const ADMIN_ID  = '8054282752';
+const ADMIN_PIN = '1234'; // PIN кодду өзгөртсөңүз болот
+
+// ═══════════════════════════════════
+//  CATEGORIES
+// ═══════════════════════════════════
+const CATS=[
+  {id:'all',   l:'🏠 Баары'},
+  {id:'besh',  l:'🥘 Беш Бармак'},
+  {id:'buyurtma',l:'🍽 Буюртма'},
+  {id:'shashlik',l:'🍢 Шашлык'},
+  {id:'main',  l:'🥩 2-Тамак'},
+  {id:'uyghur',l:'🍜 Уйгур'},
+  {id:'chicken',l:'🍗 Курочка'},
+  {id:'hot',   l:'🌶 Горячее'},
+  {id:'turkish',l:'🫕 Турецкое'},
+  {id:'pizza', l:'🍕 Пицца'},
+  {id:'soup',  l:'🍲 Шорпо'},
+  {id:'salad', l:'🥗 Салат'},
+  {id:'manty', l:'🥟 Манты'},
+  {id:'fastfood',l:'🍔 Тез Татым'},
+  {id:'bread', l:'🫓 Нан'},
+  {id:'drink', l:'🥤 Суусундук'},
+  {id:'tea',   l:'🍵 Чай'},
+  {id:'mojito',l:'🍹 Мохито'},
+];
+
+// ═══════════════════════════════════
+//  MENU — PDF'деги сүрөттөр
+// ═══════════════════════════════════
+// images/ папкасынан сүрөттөр жүктөлөт
+// Сүрөт жок болсо — Unsplash'тин алмаштыргычы колдонулат
+function img(name){ return `images/${name}.jpg`; }
+
+let M=[
+  // ── БЕШ БАРМАК ──
+  {id:1,cat:'besh',cl:'🥘 Беш Бармак',n:'Казак Беш Бармак',note:'1 порция',p:400,img:img('kazak_besh'),a:true},
+  {id:2,cat:'besh',cl:'🥘 Беш Бармак',n:'Куричотай',note:'1 порция',p:400,img:img('kurichotai'),a:true},
+  {id:3,cat:'besh',cl:'🥘 Беш Бармак',n:'Нарын',note:'1 порция',p:360,img:img('naryn_besh'),a:true},
+  {id:4,cat:'besh',cl:'🥘 Беш Бармак',n:'Талас',note:'1 порция',p:330,img:img('talas_besh'),a:true},
+  {id:5,cat:'besh',cl:'🥘 Беш Бармак',n:'Ыссык Көл',note:'1 порция',p:330,img:img('yssyk_kol'),a:true},
+  {id:6,cat:'besh',cl:'🥘 Беш Бармак',n:'Нарын Бешбармак',note:'1 порция',p:350,img:img('naryn_beshbarmak'),a:true},
+  {id:7,cat:'besh',cl:'🥘 Беш Бармак',n:'Куда Табак',note:'8 киши',p:3300,img:img('kuda_tabak'),a:true},
+  {id:8,cat:'besh',cl:'🥘 Беш Бармак',n:'Дос',note:'6 киши',p:2650,img:img('dos_besh'),a:true},
+  {id:9,cat:'besh',cl:'🥘 Беш Бармак',n:'Өзгөчө',note:'4 киши',p:2000,img:img('ozgocho_besh'),a:true},
+  {id:10,cat:'besh',cl:'🥘 Беш Бармак',n:'Чаткал',note:'2 киши',p:1100,img:img('chatkal_besh'),a:true},
+  {id:11,cat:'besh',cl:'🥘 Беш Бармак',n:'Гулчетай Беш Бармак',note:'4к/6к/8к',p:2300,img:img('gulchetai_besh'),a:true,isNew:true},
+  {id:12,cat:'besh',cl:'🥘 Беш Бармак',n:'Суур (Кабырга)',note:'100г',p:240,img:img('kazak_besh'),a:true},
+  {id:13,cat:'besh',cl:'🥘 Беш Бармак',n:'Чучук (Казы,Карта,Жал)',note:'100г',p:240,img:img('kazak_besh'),a:true},
+  {id:14,cat:'besh',cl:'🥘 Беш Бармак',n:'Кул Жебес',note:'1 порция',p:850,img:img('kazak_besh'),a:true},
+  {id:15,cat:'besh',cl:'🥘 Беш Бармак',n:'Ак Сүрке',note:'1 л / 1п',p:110,img:img('kazak_besh'),a:true},
+  // ── БУЮРТМА ──
+  {id:16,cat:'buyurtma',cl:'🍽 Буюртма',n:'Аш',note:'1 кг',p:2650,img:img('ash'),a:true},
+  {id:17,cat:'buyurtma',cl:'🍽 Буюртма',n:'Ташкент Аш',note:'1 кг',p:2650,img:img('tashkent_ash'),a:true},
+  {id:18,cat:'buyurtma',cl:'🍽 Буюртма',n:'Аш Ассорти',note:'1 кг',p:3700,img:img('ash_assorti'),a:true},
+  {id:19,cat:'buyurtma',cl:'🍽 Буюртма',n:'Нан Басты',note:'1 кг',p:1750,img:img('nan_basty'),a:true},
+  {id:20,cat:'buyurtma',cl:'🍽 Буюртма',n:'Пирожок',note:'1 кг',p:1650,img:img('pirozhok'),a:true},
+  {id:21,cat:'buyurtma',cl:'🍽 Буюртма',n:'Форель Запеченная',note:'1 кг',p:1350,img:img('forel_zapech'),a:true},
+  {id:22,cat:'buyurtma',cl:'🍽 Буюртма',n:'Форель',note:'1 кг',p:1350,img:img('forel'),a:true},
+  {id:23,cat:'buyurtma',cl:'🍽 Буюртма',n:'Горбуша',note:'1 кг',p:1100,img:img('gorbush'),a:true},
+  {id:24,cat:'buyurtma',cl:'🍽 Буюртма',n:'Минтай',note:'1 кг',p:650,img:img('mintai'),a:true},
+  // ── ШАШЛЫК ──
+  {id:25,cat:'shashlik',cl:'🍢 Шашлык',n:'Кой Этинен',note:'1 шампур',p:220,img:img('shashlik_koi'),a:true},
+  {id:26,cat:'shashlik',cl:'🍢 Шашлык',n:'Уй Этинен',note:'1 шампур',p:220,img:img('shashlik_ui'),a:true},
+  {id:27,cat:'shashlik',cl:'🍢 Шашлык',n:'Люля Кебап',note:'1 шампур',p:180,img:img('lyulya'),a:true},
+  {id:28,cat:'shashlik',cl:'🍢 Шашлык',n:'Тоок Канаттары',note:'1 шампур',p:180,img:img('took_kanattary'),a:true},
+  {id:29,cat:'shashlik',cl:'🍢 Шашлык',n:'Наполеон',note:'1 шампур',p:225,img:img('napoleon'),a:true},
+  {id:30,cat:'shashlik',cl:'🍢 Шашлык',n:'Кой Кабыргалары',note:'1 шампур',p:290,img:img('koi_kabyrga_sh'),a:true},
+  {id:31,cat:'shashlik',cl:'🍢 Шашлык',n:'Боор',note:'1 шампур',p:190,img:img('boor'),a:true},
+  // ── 2-ТАМАК ──
+  {id:32,cat:'main',cl:'🥩 2-Тамак',n:'Жаровня Уй Этинен',note:'1 порция',p:390,img:img('zharovnya_ui'),a:true},
+  {id:33,cat:'main',cl:'🥩 2-Тамак',n:'Уйгур Эт',note:'1 порция',p:400,img:img('uyghur_et'),a:true},
+  {id:34,cat:'main',cl:'🥩 2-Тамак',n:'Ачуу Эт',note:'1 порция',p:390,img:img('achuu_et'),a:true},
+  {id:35,cat:'main',cl:'🥩 2-Тамак',n:'Жаровня Тоок Этинен',note:'1 порция',p:360,img:img('zharovnya_took'),a:true},
+  {id:36,cat:'main',cl:'🥩 2-Тамак',n:'Курдак Мал Этинен',note:'1 порция',p:500,img:img('kurdak_mal'),a:true},
+  {id:37,cat:'main',cl:'🥩 2-Тамак',n:'Курдак Кой Этинен',note:'1 порция',p:500,img:img('kurdak_koi'),a:true},
+  {id:38,cat:'main',cl:'🥩 2-Тамак',n:'Курдак Тоок Этинен',note:'1 порция',p:350,img:img('kurdak_took'),a:true},
+  {id:39,cat:'main',cl:'🥩 2-Тамак',n:'Тай Куурдак',note:'1 порция',p:520,img:img('tai_kuurdak'),a:true},
+  {id:40,cat:'main',cl:'🥩 2-Тамак',n:'Манты',note:'1 порция',p:330,img:img('assorti_manty'),a:true},
+  {id:41,cat:'main',cl:'🥩 2-Тамак',n:'Манты Жаренный',note:'1 порция',p:360,img:img('et_manty'),a:true},
+  {id:42,cat:'main',cl:'🥩 2-Тамак',n:'Пельмени Жареные',note:'1 порция',p:270,img:img('kartoshka_manty'),a:true},
+  {id:43,cat:'main',cl:'🥩 2-Тамак',n:'Куриное Филе',note:'1 порция',p:330,img:img('kurinoe_file'),a:true},
+  {id:44,cat:'main',cl:'🥩 2-Тамак',n:'Табака',note:'300г',p:250,img:img('tabaka'),a:true},
+  {id:45,cat:'main',cl:'🥩 2-Тамак',n:'Семга',note:'1 порция',p:850,img:img('semga'),a:true},
+  {id:46,cat:'main',cl:'🥩 2-Тамак',n:'Фрикасе',note:'1 порция',p:360,img:img('frikase'),a:true},
+  {id:47,cat:'main',cl:'🥩 2-Тамак',n:'Паста',note:'1 порция',p:380,img:img('pasta'),a:true},
+  {id:48,cat:'main',cl:'🥩 2-Тамак',n:'Мясо с Овощами',note:'1 порция',p:500,img:img('kurdak_mal'),a:true},
+  {id:49,cat:'main',cl:'🥩 2-Тамак',n:'Курица с Овощами',note:'1 порция',p:500,img:img('kurdak_took'),a:true},
+  {id:50,cat:'main',cl:'🥩 2-Тамак',n:'Куйкум Куурдак',note:'1 порция',p:550,img:img('kuikum_kuurdak'),a:true},
+  {id:51,cat:'main',cl:'🥩 2-Тамак',n:'Кой Кабырга',note:'1 порция',p:600,img:img('koi_kabyrga'),a:true},
+  {id:52,cat:'main',cl:'🥩 2-Тамак',n:'Мал Кабырга',note:'1 порция',p:650,img:img('mal_kabyrga'),a:true},
+  {id:53,cat:'main',cl:'🥩 2-Тамак',n:'Шапанжи',note:'1 порция',p:380,img:img('shapanzhi'),a:true},
+  {id:54,cat:'main',cl:'🥩 2-Тамак',n:'Кала Пайча',note:'1 порция',p:650,img:img('kala_paicha'),a:true},
+  // ── УЙГУР ──
+  {id:55,cat:'uyghur',cl:'🍜 Уйгур',n:'Уйгур Латман',note:'1 порция',p:270,img:img('uyghur_latman'),a:true},
+  {id:56,cat:'uyghur',cl:'🍜 Уйгур',n:'Ган-Фан',note:'1 порция',p:270,img:img('gan_fan'),a:true},
+  {id:57,cat:'uyghur',cl:'🍜 Уйгур',n:'Айримсай',note:'1 порция',p:280,img:img('airimsai'),a:true},
+  {id:58,cat:'uyghur',cl:'🍜 Уйгур',n:'Босо Латман',note:'1 порция',p:300,img:img('boso_latman'),a:true},
+  {id:59,cat:'uyghur',cl:'🍜 Уйгур',n:'Мушуру',note:'1 порция',p:350,img:img('mushuru'),a:true},
+  // ── КУРОЧКА ──
+  {id:60,cat:'chicken',cl:'🍗 Курочка',n:'Крылышки',note:'1 кг',p:680,img:img('krylushki'),a:true},
+  {id:61,cat:'chicken',cl:'🍗 Курочка',n:'Наггетсы',note:'1 кг',p:700,img:img('naggety'),a:true},
+  {id:62,cat:'chicken',cl:'🍗 Курочка',n:'Сырные Палочки 3шт',note:'3 шт',p:120,img:img('syrnye_palochki'),a:true},
+  {id:63,cat:'chicken',cl:'🍗 Курочка',n:'Сырные Палочки 6шт',note:'6 шт',p:240,img:img('syrnye_palochki'),a:true},
+  {id:64,cat:'chicken',cl:'🍗 Курочка',n:'Соус Томатный',note:'1 шт',p:40,img:img('syrnye_palochki'),a:true},
+  {id:65,cat:'chicken',cl:'🍗 Курочка',n:'Соус Сырный',note:'1 шт',p:40,img:img('syrnye_palochki'),a:true},
+  // ── ГОРЯЧЕЕ ──
+  {id:66,cat:'hot',cl:'🌶 Горячее',n:'Жареная Фунчоза',note:'1 порция',p:300,img:img('funkhoza'),a:true},
+  {id:67,cat:'hot',cl:'🌶 Горячее',n:'Куриный Удон',note:'1 порция',p:290,img:img('udon'),a:true},
+  {id:68,cat:'hot',cl:'🌶 Горячее',n:'Тюро Латман',note:'1 порция',p:290,img:img('tyuro_latman'),a:true},
+  // ── ТУРЕЦКОЕ ──
+  {id:69,cat:'turkish',cl:'🫕 Турецкое',n:'Эт Соте',note:'1 порция',p:440,img:img('et_sote'),a:true},
+  {id:70,cat:'turkish',cl:'🫕 Турецкое',n:'Товук Сате',note:'1 порция',p:380,img:img('tovuk_sate'),a:true},
+  {id:71,cat:'turkish',cl:'🫕 Турецкое',n:'Сач Каурма',note:'1 порция',p:420,img:img('sach_kaurma'),a:true},
+  {id:72,cat:'turkish',cl:'🫕 Турецкое',n:'Баклажан Тавук',note:'1 порция',p:450,img:img('baklazan_tavuk'),a:true},
+  {id:73,cat:'turkish',cl:'🫕 Турецкое',n:'Капала Тувеч',note:'1 порция',p:480,img:img('kapala_tuvech'),a:true},
+  // ── ПИЦЦА ──
+  {id:74,cat:'pizza',cl:'🍕 Пицца',n:'Пепперони 35см',note:'35 см',p:360,img:img('pepperoni'),a:true},
+  {id:75,cat:'pizza',cl:'🍕 Пицца',n:'Пепперони 45см',note:'45 см',p:460,img:img('pepperoni'),a:true},
+  {id:76,cat:'pizza',cl:'🍕 Пицца',n:'4 Сыра 35см',note:'35 см',p:360,img:img('4syra'),a:true},
+  {id:77,cat:'pizza',cl:'🍕 Пицца',n:'4 Сыра 45см',note:'45 см',p:460,img:img('4syra'),a:true},
+  {id:78,cat:'pizza',cl:'🍕 Пицца',n:'Маргарита 35см',note:'35 см',p:350,img:img('margarita'),a:true},
+  {id:79,cat:'pizza',cl:'🍕 Пицца',n:'Маргарита 45см',note:'45 см',p:450,img:img('margarita'),a:true},
+  {id:80,cat:'pizza',cl:'🍕 Пицца',n:'Цезарь 35см',note:'35 см',p:370,img:img('tsezar_pizza'),a:true},
+  {id:81,cat:'pizza',cl:'🍕 Пицца',n:'Цезарь 45см',note:'45 см',p:470,img:img('tsezar_pizza'),a:true},
+  {id:82,cat:'pizza',cl:'🍕 Пицца',n:'Ассорти 35см',note:'35 см',p:380,img:img('assorti_pizza'),a:true},
+  {id:83,cat:'pizza',cl:'🍕 Пицца',n:'Ассорти 45см',note:'45 см',p:480,img:img('assorti_pizza'),a:true},
+  {id:84,cat:'pizza',cl:'🍕 Пицца',n:'Спайс 35см',note:'35 см',p:360,img:img('spais_pizza'),a:true},
+  {id:85,cat:'pizza',cl:'🍕 Пицца',n:'Спайс 45см',note:'45 см',p:460,img:img('spais_pizza'),a:true},
+  {id:86,cat:'pizza',cl:'🍕 Пицца',n:'Куриный 35см',note:'35 см',p:350,img:img('kurinyi_pizza'),a:true},
+  {id:87,cat:'pizza',cl:'🍕 Пицца',n:'Куриный 45см',note:'45 см',p:450,img:img('kurinyi_pizza'),a:true},
+  {id:88,cat:'pizza',cl:'🍕 Пицца',n:'Мясная Пепперони 35см',note:'35 см',p:400,img:img('myasnaya_pizza'),a:true},
+  {id:89,cat:'pizza',cl:'🍕 Пицца',n:'Мясная Пепперони 45см',note:'45 см',p:500,img:img('myasnaya_pizza'),a:true},
+  // ── ШОРПО ──
+  {id:90,cat:'soup',cl:'🍲 Шорпо',n:'Мастава',note:'1 порция',p:220,img:img('mastava'),a:true},
+  {id:91,cat:'soup',cl:'🍲 Шорпо',n:'Мампар',note:'1 порция',p:250,img:img('mampar'),a:true},
+  {id:92,cat:'soup',cl:'🍲 Шорпо',n:'Козо Шорпо (Кой)',note:'Кой',p:350,img:img('kozo_shorpo'),a:true},
+  {id:93,cat:'soup',cl:'🍲 Шорпо',n:'Козо Шорпо (Мал)',note:'Мал',p:350,img:img('kozo_shorpo'),a:true},
+  {id:94,cat:'soup',cl:'🍲 Шорпо',n:'Чучпара Шорпосу',note:'1 порция',p:220,img:img('chuchpara_shorpo'),a:true},
+  {id:95,cat:'soup',cl:'🍲 Шорпо',n:'Индюк Шорпо',note:'1 порция',p:465,img:img('induk_shorpo'),a:true},
+  {id:96,cat:'soup',cl:'🍲 Шорпо',n:'Бодоно Шорпо',note:'1 порция',p:360,img:img('bodono_shorpo'),a:true},
+  {id:97,cat:'soup',cl:'🍲 Шорпо',n:'Тоок Шорпо',note:'1 порция',p:300,img:img('took_shorpo'),a:true},
+  {id:98,cat:'soup',cl:'🍲 Шорпо',n:'Чечевица с Сыром',note:'1 порция',p:140,img:img('chechevitsa'),a:true},
+  {id:99,cat:'soup',cl:'🍲 Шорпо',n:'Суп с Фрикадельками',note:'1 порция',p:210,img:img('sup_frikadel'),a:true},
+  {id:100,cat:'soup',cl:'🍲 Шорпо',n:'Шалшама',note:'1 порция',p:190,img:img('shalshama'),a:true},
+  {id:101,cat:'soup',cl:'🍲 Шорпо',n:'Казак Шорпо',note:'1 порция',p:190,img:img('kozo_shorpo'),a:true},
+  {id:102,cat:'soup',cl:'🍲 Шорпо',n:'Рамён',note:'1 порция',p:250,img:img('ramen'),a:true},
+  // ── САЛАТ ──
+  {id:103,cat:'salad',cl:'🥗 Салат',n:'Мужской Каприз',note:'1 порция',p:250,img:img('muzhskoi_kapriz'),a:true},
+  {id:104,cat:'salad',cl:'🥗 Салат',n:'Свежий',note:'1 порция',p:170,img:img('svezhiy'),a:true},
+  {id:105,cat:'salad',cl:'🥗 Салат',n:'Цезарь',note:'1 порция',p:265,img:img('tsezar_salad'),a:true},
+  {id:106,cat:'salad',cl:'🥗 Салат',n:'Табышмак',note:'1 порция',p:220,img:img('tabyshmak'),a:true},
+  {id:107,cat:'salad',cl:'🥗 Салат',n:'Хрустящий Баклажан',note:'1 порция',p:240,img:img('khrustyashiy_bak'),a:true},
+  {id:108,cat:'salad',cl:'🥗 Салат',n:'Лаззат',note:'1 порция',p:295,img:img('lazzat_salad'),a:true},
+  {id:109,cat:'salad',cl:'🥗 Салат',n:'Греческий',note:'1 порция',p:240,img:img('grecheskiy'),a:true},
+  {id:110,cat:'salad',cl:'🥗 Салат',n:'Өзгөчө',note:'1 порция',p:265,img:img('ozgocho_salad'),a:true},
+  {id:111,cat:'salad',cl:'🥗 Салат',n:'Гнездо',note:'1 порция',p:260,img:img('gnezdo'),a:true},
+  {id:112,cat:'salad',cl:'🥗 Салат',n:'Шакарап',note:'1 порция',p:120,img:img('shakarap'),a:true},
+  {id:113,cat:'salad',cl:'🥗 Салат',n:'Салат Фантазия',note:'1 порция',p:230,img:img('salat_fantaziya'),a:true},
+  {id:114,cat:'salad',cl:'🥗 Салат',n:'Салат Тойбос',note:'1 порция',p:225,img:img('salat_toibos'),a:true},
+  {id:115,cat:'salad',cl:'🥗 Салат',n:'Салат Бешбармак',note:'1 порция',p:390,img:img('salat_beshbarmak'),a:true},
+  {id:116,cat:'salad',cl:'🥗 Салат',n:'Салат Катузу Острый',note:'1 порция',p:295,img:img('salat_katuzu'),a:true},
+  // ── МАНТЫ ──
+  {id:117,cat:'manty',cl:'🥟 Манты',n:'Ассорти Манты',note:'1 порция',p:380,img:img('assorti_manty'),a:true,isNew:true},
+  {id:118,cat:'manty',cl:'🥟 Манты',n:'Эт Манты',note:'1 порция',p:360,img:img('et_manty'),a:true},
+  {id:119,cat:'manty',cl:'🥟 Манты',n:'Картошка Манты',note:'1 порция',p:240,img:img('kartoshka_manty'),a:true},
+  {id:120,cat:'manty',cl:'🥟 Манты',n:'Ашкабак Эт Манты',note:'1 порция',p:270,img:img('ashkabak_manty'),a:true},
+  {id:121,cat:'manty',cl:'🥟 Манты',n:'Жуңсай Эт Манты',note:'1 порция',p:270,img:img('zhungsai_manty'),a:true},
+  // ── ТЕЗ ТАТЫМ ──
+  {id:122,cat:'fastfood',cl:'🍔 Тез Татым',n:'Бургер',note:'1 дана',p:200,img:img('burger'),a:true},
+  {id:123,cat:'fastfood',cl:'🍔 Тез Татым',n:'Гамбургер Кур.',note:'1 дана',p:160,img:img('gamburger_kur'),a:true},
+  {id:124,cat:'fastfood',cl:'🍔 Тез Татым',n:'Гамбургер Гов.',note:'1 дана',p:170,img:img('gamburger_gov'),a:true},
+  {id:125,cat:'fastfood',cl:'🍔 Тез Татым',n:'Чизбургер',note:'1 дана',p:280,img:img('chizburgur'),a:true},
+  {id:126,cat:'fastfood',cl:'🍔 Тез Татым',n:'Чикен Бургер',note:'1 дана',p:240,img:img('chiken_burger'),a:true},
+  {id:127,cat:'fastfood',cl:'🍔 Тез Татым',n:'Хот-Дог',note:'1 дана',p:140,img:img('hot_dog'),a:true},
+  {id:128,cat:'fastfood',cl:'🍔 Тез Татым',n:'Шаурма Гов.',note:'1 дана',p:270,img:img('shaurma_gov'),a:true},
+  {id:129,cat:'fastfood',cl:'🍔 Тез Татым',n:'Шаурма Кур.',note:'1 дана',p:220,img:img('shaurma_kur'),a:true},
+  {id:130,cat:'fastfood',cl:'🍔 Тез Татым',n:'Запеченная Шаурма',note:'1 дана',p:280,img:img('zapech_shaurma'),a:true},
+  {id:131,cat:'fastfood',cl:'🍔 Тез Татым',n:'Донер',note:'1 дана',p:220,img:img('doner'),a:true},
+  {id:132,cat:'fastfood',cl:'🍔 Тез Татым',n:'Твистер',note:'1 дана',p:260,img:img('tvister'),a:true},
+  {id:133,cat:'fastfood',cl:'🍔 Тез Татым',n:'Картофель Фри',note:'1 порция',p:120,img:img('kartof_fri'),a:true},
+  {id:134,cat:'fastfood',cl:'🍔 Тез Татым',n:'Картофель По-Деревенски',note:'1 порция',p:150,img:img('kartof_dereven'),a:true},
+  // ── НАН ──
+  {id:135,cat:'bread',cl:'🫓 Нан',n:'Токоч',note:'1 дана',p:70,img:img('tokoch'),a:true},
+  {id:136,cat:'bread',cl:'🫓 Нан',n:'Борсок',note:'1 кг',p:265,img:img('borsok'),a:true},
+  {id:137,cat:'bread',cl:'🫓 Нан',n:'Каттама',note:'1 дана',p:135,img:img('kattama'),a:true},
+  {id:138,cat:'bread',cl:'🫓 Нан',n:'Чак-Чак',note:'1 дана',p:55,img:img('chakchak'),a:true},
+  {id:139,cat:'bread',cl:'🫓 Нан',n:'Самсы',note:'1 дана',p:75,img:img('samsy'),a:true},
+  {id:140,cat:'bread',cl:'🫓 Нан',n:'Нан',note:'1 дана',p:35,img:img('tokoch'),a:true},
+  {id:141,cat:'bread',cl:'🫓 Нан',n:'Бокс-Бокс',note:'1 дана',p:60,img:img('samsy'),a:true},
+  // ── СУУСУНДУК ──
+  {id:142,cat:'drink',cl:'🥤 Суусундук',n:'Жалал-Абад 0.5л',note:'0.5 л',p:35,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:143,cat:'drink',cl:'🥤 Суусундук',n:'Жалал-Абад 1л',note:'1 л',p:50,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:144,cat:'drink',cl:'🥤 Суусундук',n:'Адыгене',note:'0.5/0.7 л',p:25,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:145,cat:'drink',cl:'🥤 Суусундук',n:'Легенда',note:'0.5/0.75 л',p:45,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:146,cat:'drink',cl:'🥤 Суусундук',n:'РС Кола',note:'0.5/1 л',p:85,img:'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=320&q=60',a:true},
+  {id:147,cat:'drink',cl:'🥤 Суусундук',n:'Шоро',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:148,cat:'drink',cl:'🥤 Суусундук',n:'Максым',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:149,cat:'drink',cl:'🥤 Суусундук',n:'Аралаш',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:150,cat:'drink',cl:'🥤 Суусундук',n:'Чалап',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:151,cat:'drink',cl:'🥤 Суусундук',n:'Тан',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:152,cat:'drink',cl:'🥤 Суусундук',n:'Жарма',note:'1 шт',p:99,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:153,cat:'drink',cl:'🥤 Суусундук',n:'Лимонад',note:'1 шт',p:50,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  {id:154,cat:'drink',cl:'🥤 Суусундук',n:'Чай Кара/Кок',note:'1 чайник',p:25,img:'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=320&q=60',a:true},
+  {id:155,cat:'drink',cl:'🥤 Суусундук',n:'Ташкент',note:'0.8/1.5 л',p:130,img:'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=320&q=60',a:true},
+  // ── ЧАЙ ──
+  {id:156,cat:'tea',cl:'🍵 Чай',n:'Чай Облепихой',note:'1 чайник',p:130,img:img('chai_oblepikh'),a:true},
+  {id:157,cat:'tea',cl:'🍵 Чай',n:'Чай Фруктовый',note:'1 чайник',p:180,img:img('chai_fruktovyi'),a:true},
+  {id:158,cat:'tea',cl:'🍵 Чай',n:'Чай с Имбирем',note:'1 чайник',p:120,img:img('chai_imbir'),a:true},
+  {id:159,cat:'tea',cl:'🍵 Чай',n:'Нават Чай',note:'1 чайник',p:120,img:img('navat_chai'),a:true},
+  {id:160,cat:'tea',cl:'🍵 Чай',n:'Чай Ташкентский',note:'1 чайник',p:120,img:img('chai_tashkent'),a:true},
+  // ── МОХИТО ──
+  {id:161,cat:'mojito',cl:'🍹 Мохито',n:'Мохито Классика 0.3л',note:'0.3 л',p:165,img:img('mokhito'),a:true},
+  {id:162,cat:'mojito',cl:'🍹 Мохито',n:'Мохито Классика 1л',note:'1 л',p:250,img:img('mokhito'),a:true},
+  {id:163,cat:'mojito',cl:'🍹 Мохито',n:'Мохито Клубника 0.3л',note:'0.3 л',p:165,img:img('mokhito'),a:true},
+  {id:164,cat:'mojito',cl:'🍹 Мохито',n:'Мохито Арбузный 0.3л',note:'0.3 л',p:165,img:img('mokhito'),a:true},
+  {id:165,cat:'mojito',cl:'🍹 Мохито',n:'Манго Маракуя 0.3л',note:'0.3 л',p:240,img:img('mokhito'),a:true},
+  {id:166,cat:'mojito',cl:'🍹 Мохито',n:'Ягодный 0.3л',note:'0.3 л',p:165,img:img('mokhito'),a:true},
+  {id:167,cat:'mojito',cl:'🍹 Мохито',n:'Ананасовый 0.3л',note:'0.3 л',p:165,img:img('mokhito'),a:true},
+];
+
+// ── ADMIN PIN ──
+let adminUnlocked = false;
+let editingImgId = null;
+
+function checkPin(){
+  const pin = document.getElementById('pinInp').value;
+  if(pin === ADMIN_PIN){
+    adminUnlocked = true;
+    rAdmBody();
+    toast('✅ Кирдиңиз!');
+  } else {
+    toast('❌ PIN туура эмес!');
+    document.getElementById('pinInp').value = '';
+  }
+}
+
+// ── STATE ──
+let cart={}, ac='all';
+const FB='https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=320&q=50';
+
+function init(){rCats();rMenu();}
+function rCats(){
+  document.getElementById('catBar').innerHTML=CATS.map(c=>
+    `<button class="cat${c.id===ac?' on':''}" onclick="sc('${c.id}')">${c.l}</button>`
+  ).join('');
+}
+function sc(id){ac=id;rCats();rMenu();window.scrollTo({top:0,behavior:'smooth'});}
+function rMenu(){
+  const order=CATS.filter(c=>c.id!=='all').map(c=>c.id);
+  let h='';
+  order.forEach(cid=>{
+    const its=M.filter(i=>(ac==='all'||i.cat===ac)&&i.cat===cid);
+    if(!its.length) return;
+    const lbl=CATS.find(c=>c.id===cid)?.l||cid;
+    h+=`<div class="sec-t">${lbl}</div><div class="grid">`;
+    its.forEach(i=>{h+=cHtml(i,cart[i.id]||0);});
+    h+='</div>';
+  });
+  document.getElementById('menuWrap').innerHTML=h;
+  syncBar();
+}
+function cHtml(i,q){
+  return `<div class="card${i.a?'':' stop'}" id="c${i.id}">
+    ${i.isNew?'<div class="newbadge">NEW</div>':''}
+    ${!i.a?'<div class="stbadge">СТОП</div>':''}
+    <img src="${i.img}" loading="lazy" onerror="this.src='${FB}'">
+    <div class="cbody">
+      <div class="cname">${i.n}</div>
+      <div class="cnote">${i.note}</div>
+      <div class="cprice">${i.p} сом</div>
+      <div id="q${i.id}">${qHtml(i,q)}</div>
+    </div></div>`;
+}
+function qHtml(i,q){
+  if(!i.a) return `<button class="add-btn" disabled>СТОП</button>`;
+  if(q===0) return `<button class="add-btn" onclick="add(${i.id})">+ Кошуу</button>`;
+  return `<div class="qty-r">
+    <button class="qb m" onclick="rem(${i.id})">−</button>
+    <span class="qn">${q}</span>
+    <button class="qb p" onclick="add(${i.id})">+</button>
+  </div>`;
+}
+function add(id){
+  const i=M.find(x=>x.id===id);if(!i||!i.a) return;
+  cart[id]=(cart[id]||0)+1;rQ(id);syncBar();toast(`✅ ${i.n}`);
+}
+function rem(id){
+  if(!cart[id]) return;
+  cart[id]--;if(cart[id]<=0)delete cart[id];rQ(id);syncBar();
+}
+function rQ(id){
+  const el=document.getElementById(`q${id}`);
+  if(el) el.innerHTML=qHtml(M.find(i=>i.id===id),cart[id]||0);
+}
+function cItems(){return Object.keys(cart).map(id=>({...M.find(i=>i.id==id),qty:cart[id]}));}
+function cTotal(){return cItems().reduce((s,i)=>s+i.p*i.qty,0);}
+function cCount(){return Object.values(cart).reduce((s,v)=>s+v,0);}
+function syncBar(){
+  const n=cCount(),t=cTotal(),btn=document.getElementById('cartBtn');
+  btn.style.display=n>0?'flex':'none';
+  document.getElementById('cCnt').textContent=n;
+  document.getElementById('cTot').textContent=t+' сом';
+}
+
+// ── CART ──
+function openCart(){rCartBody();show('cartOv');}
+function rCartBody(){
+  const items=cItems(),total=cTotal(),el=document.getElementById('cartBody');
+  if(!items.length){el.innerHTML='<div class="cempty">🛒 Себет бош</div>';return;}
+  el.innerHTML=items.map(i=>`
+    <div class="ci">
+      <img src="${i.img}" onerror="this.src='${FB}'">
+      <div class="cii">
+        <div class="cin">${i.n}</div>
+        <div class="cip">${i.p} × ${i.qty} = ${i.p*i.qty} сом</div>
+      </div>
+      <div class="ciq">
+        <button class="qb m" onclick="cRem(${i.id})">−</button>
+        <span class="qn">${i.qty}</span>
+        <button class="qb p" onclick="cAdd(${i.id})">+</button>
+      </div>
+    </div>`).join('')+`
+  <div class="ctot"><div class="ctl">Жалпы / Итого:</div><div class="ctv">${total} сом</div></div>
+  <div class="fsec">
+    <div class="flbl">👤 Атыңыз / Ваше имя</div>
+    <input class="finp" id="iname" type="text" placeholder="Аты-жөнүңүз...">
+    <div class="flbl">📞 Телефон</div>
+    <input class="finp" id="iphone" type="tel" placeholder="+996 700 000 000">
+  </div>
+  <button class="cfbtn" id="orderBtn" onclick="doOrder()">✅ Буюртманы Тастыктоо</button>`;
+}
+function cAdd(id){add(id);rCartBody();}
+function cRem(id){rem(id);rCartBody();}
+
+// ── ORDER → TELEGRAM ──
+async function doOrder(){
+  const name=(document.getElementById('iname').value||'').trim();
+  const phone=(document.getElementById('iphone').value||'').trim();
+  if(!name){toast('⚠️ Атыңызды жазыңыз!');return;}
+  if(!phone){toast('⚠️ Телефонду жазыңыз!');return;}
+  const items=cItems(), total=cTotal();
+  const btn=document.getElementById('orderBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Жөнөтүлүүдө...';}
+
+  const orderData={name,phone,items:items.map(i=>({name:i.n,price:i.p,qty:i.qty})),total};
+
+  // 1: Telegram sendData
+  if(tg && tg.sendData){
+    try{ tg.sendData(JSON.stringify(orderData)); onSuccess(); return; }catch(e){}
+  }
+
+  // 2: Bot API аркылуу
+  let msg=`🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n━━━━━━━━━━━━━━━━━━━━\n`;
+  msg+=`👤 *Аты:* ${name}\n📞 *Тел:* ${phone}\n`;
+  if(tg?.initDataUnsafe?.user){const u=tg.initDataUnsafe.user;msg+=`🆔 TG: ${u.id}${u.username?' @'+u.username:''}\n`;}
+  msg+=`━━━━━━━━━━━━━━━━━━━━\n📦 *БУЮРТМАЛАР:*\n`;
+  items.forEach(i=>{msg+=`  • ${i.n} × ${i.qty} = *${i.p*i.qty} сом*\n`;});
+  msg+=`━━━━━━━━━━━━━━━━━━━━\n💵 *ЖАЛПЫ: ${total} сом*\n`;
+  msg+=`🕐 ${new Date().toLocaleString('ru-RU',{timeZone:'Asia/Bishkek'})}`;
+
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:ADMIN_ID,text:msg,parse_mode:'Markdown'})
+    });
+    const d=await r.json();
+    if(d.ok){onSuccess();}else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Буюртманы Тастыктоо';}}
+  }catch(e){
+    toast('⚠️ Интернет байланышы жок!');
+    if(btn){btn.disabled=false;btn.textContent='✅ Буюртманы Тастыктоо';}
+  }
+}
+function onSuccess(){
+  cart={};syncBar();cls('cartOv');rMenu();
+  toast('🎉 Буюртма жөнөтүлдү!');
+  if(tg) setTimeout(()=>tg.close(),1500);
+}
+
+// ── ADMIN ──
+function openAdm(){
+  adminUnlocked=false;
+  document.getElementById('admBody').innerHTML='<div class="adm-locked">🔒 PIN код киргизиңиз</div>';
+  document.getElementById('pinInp').value='';
+  show('admOv');
+}
+function rAdmBody(){
+  if(!adminUnlocked){document.getElementById('admBody').innerHTML='<div class="adm-locked">🔒 PIN код киргизиңиз</div>';return;}
+  const order=CATS.filter(c=>c.id!=='all').map(c=>c.id);
+  let h='';
+  order.forEach(cid=>{
+    const its=M.filter(i=>i.cat===cid);if(!its.length)return;
+    const lbl=CATS.find(c=>c.id===cid)?.l||cid;
+    h+=`<div class="acat">${lbl}</div>`;
+    its.forEach(i=>{
+      h+=`<div class="ait">
+        <div class="aimg-wrap">
+          <img class="aimg" src="${i.img}" onerror="this.src='${FB}'" id="ai${i.id}">
+          <button class="aimg-edit" onclick="editImg(${i.id})">✏️</button>
+        </div>
+        <div class="ainf">
+          <div class="an">${i.n}</div>
+          <div class="ar">
+            <input class="ainp" id="p${i.id}" type="number" value="${i.p}" min="0">
+            <button class="asv" onclick="svP(${i.id})">💾</button>
+          </div>
+        </div>
+        <button class="tb ${i.a?'on':'off'}" id="t${i.id}" onclick="tog(${i.id})">${i.a?'🟢 Бар':'🔴 Стоп'}</button>
+      </div>`;
+    });
+  });
+  // Жаңы тамак
+  h+=`<div class="addsec">
+    <div class="addtit">➕ Жаңы тамак кошуу</div>
+    <input class="finp" id="an" placeholder="Тамактын аты..." style="margin-bottom:6px">
+    <input class="finp" id="anote" placeholder="Сыпаттама (1 порция...)" style="margin-bottom:6px">
+    <div class="addrow">
+      <input class="finp" id="aprice" type="number" placeholder="Баасы (сом)">
+      <select class="finp" id="acat">${CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.l}</option>`).join('')}</select>
+    </div>
+    <input class="finp" id="aimg" placeholder="Сүрөт URL (милдеттүү эмес)" style="margin-bottom:6px">
+    <button class="addbtn" onclick="addNew()">➕ Менюга Кошуу</button>
+  </div>`;
+  document.getElementById('admBody').innerHTML=h;
+}
+function tog(id){
+  if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
+  const i=M.find(x=>x.id===id);if(!i)return;
+  i.a=!i.a;
+  const b=document.getElementById(`t${id}`);
+  if(b){b.className=`tb ${i.a?'on':'off'}`;b.textContent=i.a?'🟢 Бар':'🔴 Стоп';}
+  rMenu();toast(i.a?`✅ ${i.n} — менюда`:`🔴 ${i.n} — стоп`);
+}
+function svP(id){
+  if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
+  const i=M.find(x=>x.id===id);if(!i)return;
+  const v=parseInt(document.getElementById(`p${id}`).value);
+  if(isNaN(v)||v<0){toast('⚠️ Туура сан!');return;}
+  i.p=v;rMenu();toast(`💾 ${i.n} — ${v} сом`);
+}
+function addNew(){
+  if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
+  const n=(document.getElementById('an').value||'').trim();
+  const note=(document.getElementById('anote').value||'1 порция').trim();
+  const p=parseInt(document.getElementById('aprice').value);
+  const cat=document.getElementById('acat').value;
+  const imgUrl=(document.getElementById('aimg').value||'').trim();
+  if(!n){toast('⚠️ Атын жазыңыз!');return;}
+  if(isNaN(p)||p<=0){toast('⚠️ Баасын жазыңыз!');return;}
+  const cl=CATS.find(c=>c.id===cat)?.l||cat;
+  M.push({id:Date.now(),cat,cl,n,note,p,img:imgUrl||FB,a:true});
+  rMenu();rAdmBody();toast(`✅ ${n} кошулду!`);
+}
+// Сүрөт өзгөртүү
+function editImg(id){
+  if(!adminUnlocked){toast('🔒 Кирүү зарыл!');return;}
+  editingImgId=id;
+  const i=M.find(x=>x.id===id);
+  document.getElementById('imgEditTitle').textContent=i.n;
+  document.getElementById('imgPreview').src=i.img;
+  document.getElementById('imgUrlInp').value=i.img.startsWith('images/')?'':i.img;
+  show('imgEditOv');
+}
+function applyImg(){
+  if(!editingImgId)return;
+  const url=document.getElementById('imgUrlInp').value.trim();
+  if(!url){toast('⚠️ URL жазыңыз!');return;}
+  const i=M.find(x=>x.id===editingImgId);
+  if(i){
+    i.img=url;
+    const el=document.getElementById(`ai${editingImgId}`);
+    if(el)el.src=url;
+    rMenu();
+    toast('✅ Сүрөт өзгөрдү!');
+  }
+  cls2('imgEditOv');editingImgId=null;
+}
+
+// ── HELPERS ──
+function show(id){document.getElementById(id).classList.add('show');}
+function cls(id){document.getElementById(id).classList.remove('show');}
+function cls2(id){document.getElementById(id).classList.remove('show');}
+function bgc(e,id){if(e.target===e.currentTarget)cls(id);}
+let tt;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+init();
+</script>
+</body>
+</html>
