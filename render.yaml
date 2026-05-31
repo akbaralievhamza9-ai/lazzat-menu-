@@ -1,0 +1,7 @@
+services:
+  - type: worker
+    name: lazzat-bot
+    env: node
+    buildCommand: npm install
+    startCommand: node bot.js
+    rootDir: bot
