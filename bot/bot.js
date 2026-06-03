@@ -39,7 +39,13 @@ async function finishOrder(ctx, s) {
         [t.changeLanguage]
     ]).resize();
 
-    await ctx.reply(t.orderSuccess(s.name, s.phone), { 
+    let successMsg = t.orderSuccess(s.name, s.phone);
+    successMsg += `\n\n📦 *${lang === 'ky' ? 'БУЮРТМАЛАР' : 'ВАШ ЗАКАЗ'}:*\n`;
+    successMsg += `  • ${s.orderText}\n`;
+    successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${s.address}\n`;
+
+    await ctx.reply(successMsg, { 
         parse_mode: 'Markdown',
         ...keyboard
     });
@@ -209,8 +215,21 @@ bot.on('web_app_data', async (ctx) => {
         const lang = userLanguages[u.id] || 'ky';
         const t = TRANSLATIONS[lang];
 
+        let successMsg = t.orderSuccess(name, phone);
+        successMsg += `\n\n📦 *${lang === 'ky' ? 'БУЮРТМАЛАР' : 'ВАШ ЗАКАЗ'}:*\n`;
+        items.forEach(i => {
+            if (i.price > 0) {
+                successMsg += `  • ${i.name} × ${i.qty} = *${i.price * i.qty} сом*\n`;
+            } else {
+                successMsg += `  • ${i.name}\n`;
+            }
+        });
+        successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
+        if (total !== '—') successMsg += `💵 *${lang === 'ky' ? 'ЖАЛПЫ' : 'ИТОГО'}: ${total} сом*\n`;
+        successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${address}\n`;
+
         // Кардарга жооп
-        await ctx.reply(t.orderSuccess(name, phone), { parse_mode: 'Markdown' });
+        await ctx.reply(successMsg, { parse_mode: 'Markdown' });
 
         // Админге жөнөтүү (чек сүрөтү менен бирге)
         await sendOrderToAdmin(bot, u, name, phone, address, items, total, 'Mini App', receipt);
