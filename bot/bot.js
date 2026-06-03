@@ -15,6 +15,40 @@ function getWebAppUrl() {
 const bot = new Telegraf(BOT_TOKEN);
 const sessions = {}; // Кардарлардын кадамдары
 
+function cleanPhoneNumber(phone) {
+    let cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('996')) {
+        cleaned = cleaned.substring(3);
+    }
+    if (cleaned.startsWith('0')) {
+        cleaned = cleaned.substring(1);
+    }
+    return cleaned;
+}
+
+async function finishOrder(ctx, s) {
+    const uid = ctx.from.id;
+    const lang = userLanguages[uid] || 'ky';
+    const t = TRANSLATIONS[lang];
+    
+    delete sessions[uid];
+
+    const keyboard = Markup.keyboard([
+        [t.btnMenu, t.btnOrder],
+        [t.btnContact, t.btnInfo],
+        [t.changeLanguage]
+    ]).resize();
+
+    await ctx.reply(t.orderSuccess(s.name, s.phone), { 
+        parse_mode: 'Markdown',
+        ...keyboard
+    });
+
+    // Админге жөнөтүү
+    const items = [{ name: s.orderText, price: 0, qty: 1 }];
+    await sendOrderToAdmin(bot, ctx.from, s.name, s.phone, s.address, items, '—', `Текст (${lang.toUpperCase()})`);
+}
+
 // 🌐 Тил сактоо файл
 const LANG_FILE = path.join(__dirname, 'user_languages.json');
 let userLanguages = {};
@@ -51,7 +85,8 @@ const TRANSLATIONS = {
         btnInfo: 'ℹ️ Маалымат',
         orderPrompt: '📝 Каалаган тамактарды жазыңыз:\nМисалы: _Казак Беш Бармак 2шт, Шашлык 3шт_\n\nЖе менюдан тандаңыз:',
         namePrompt: '✍️ Атыңызды жазыңыз:',
-        phonePrompt: '📞 Телефон номериңиз:\nМисалы: +996 700 000 000',
+        phonePrompt: '📞 Телефон номериңизди жазыңыз:\n(Мисалы: 703397666, +996сыз жазыңыз)',
+        addressPrompt: '🚖 Толук дарегиңизди жазыңыз (мисалы: Чүй проспектиси 120, батир 5):',
         orderSuccess: (name, phone) => `🎉 *Урматтуу ${name}, буюртмаңыз ийгиликтүү кабыл алынды!* \n\n` +
                                        `⏱ Тамагыңыз *15-25 мүнөттө* даяр болот!\n` +
                                        `🚖 Жеткирүү убактысы: *30-55 мүнөт* аралыгында.\n\n` +
@@ -86,7 +121,8 @@ const TRANSLATIONS = {
         btnInfo: 'ℹ️ Информация',
         orderPrompt: '📝 Напишите желаемые блюда:\nНапример: _Казахский Бешбармак 2шт, Шашлык 3шт_\n\nИли выберите в меню:',
         namePrompt: '✍️ Напишите ваше имя:',
-        phonePrompt: '📞 Ваш номер телефона:\nНапример: +996 700 000 000',
+        phonePrompt: '📞 Ваш номер телефона:\n(Например: 703397666, пишите без +996)',
+        addressPrompt: '🚖 Напишите ваш полный адрес (например: проспект Чуй 120, кв 5):',
         orderSuccess: (name, phone) => `🎉 *Уважаемый(ая) ${name}, ваш заказ успешно принят!* \n\n` +
                                        `⏱ Блюдо будет готово за *15-25 минут*!\n` +
                                        `🚖 Время доставки: от *30 до 55 минут*.\n\n` +
@@ -168,7 +204,7 @@ bot.action(/lang_(ky|ru)/, async (ctx) => {
 bot.on('web_app_data', async (ctx) => {
     try {
         const data = JSON.parse(ctx.webAppData.data);
-        const { name, phone, items, total, receipt } = data;
+        const { name, phone, address, items, total, receipt } = data;
         const u = ctx.from;
         const lang = userLanguages[u.id] || 'ky';
         const t = TRANSLATIONS[lang];
@@ -177,7 +213,7 @@ bot.on('web_app_data', async (ctx) => {
         await ctx.reply(t.orderSuccess(name, phone), { parse_mode: 'Markdown' });
 
         // Админге жөнөтүү (чек сүрөтү менен бирге)
-        await sendOrderToAdmin(bot, u, name, phone, items, total, 'Mini App', receipt);
+        await sendOrderToAdmin(bot, u, name, phone, address, items, total, 'Mini App', receipt);
     } catch(e) {
         console.error(e);
         ctx.reply('⚠️ Ката. Кайрадан аракет кылыңыз / Ошибка. Попробуйте еще раз.');
@@ -251,18 +287,76 @@ bot.on('text', async (ctx) => {
     if (s.step === 'ask_name') {
         s.name = text;
         s.step = 'ask_phone';
-        return ctx.reply(t.phonePrompt);
+        return ctx.reply(
+            t.phonePrompt,
+            Markup.keyboard([
+                [Markup.button.contactRequest(lang === 'ky' ? '📞 Телефон номурду жөнөтүү' : '📞 Отправить контакт')]
+            ]).oneTime().resize()
+        );
     }
     if (s.step === 'ask_phone') {
-        s.phone = text;
-        delete sessions[uid];
-
-        await ctx.reply(t.orderSuccess(s.name, s.phone), { parse_mode: 'Markdown' });
-
-        // Админге жөнөтүү
-        const items = [{ name: s.orderText, price: 0, qty: 1 }];
-        await sendOrderToAdmin(bot, ctx.from, s.name, s.phone, items, '—', `Текст (${lang.toUpperCase()})`);
+        const cleanedPhone = cleanPhoneNumber(text);
+        if (cleanedPhone.length !== 9) {
+            return ctx.reply(
+                lang === 'ky' 
+                    ? '⚠️ Телефон номериңизди туура жазыңыз.\n(Мисалы: 703397666, 9 орундуу сан)' 
+                    : '⚠️ Введите корректный номер телефона.\n(Например: 703397666, 9-значный номер)'
+            );
+        }
+        s.phone = cleanedPhone;
+        s.step = 'ask_address';
+        return ctx.reply(
+            t.addressPrompt,
+            Markup.keyboard([
+                [Markup.button.locationRequest(lang === 'ky' ? '📍 Жайгашкан жерди жөнөтүү' : '📍 Отправить геолокацию')]
+            ]).oneTime().resize()
+        );
     }
+    if (s.step === 'ask_address') {
+        s.address = text;
+        await finishOrder(ctx, s);
+        return;
+    }
+});
+
+bot.on('contact', async (ctx) => {
+    const uid = ctx.from.id;
+    const s = sessions[uid];
+    if (!s || s.step !== 'ask_phone') return;
+
+    const lang = userLanguages[uid] || 'ky';
+    const t = TRANSLATIONS[lang];
+    const contact = ctx.message.contact;
+
+    if (String(contact.user_id) !== String(uid)) {
+        return ctx.reply(
+            lang === 'ky' 
+                ? '⚠️ Сураныч, өзүңүздүн гана номериңизди жөнөтүңүз.' 
+                : '⚠️ Пожалуйста, отправьте только собственный номер.'
+        );
+    }
+
+    const cleanedPhone = cleanPhoneNumber(contact.phone_number);
+    s.phone = cleanedPhone;
+    s.step = 'ask_address';
+    
+    return ctx.reply(
+        t.addressPrompt,
+        Markup.keyboard([
+            [Markup.button.locationRequest(lang === 'ky' ? '📍 Жайгашкан жерди жөнөтүү' : '📍 Отправить геолокацию')]
+        ]).oneTime().resize()
+    );
+});
+
+bot.on('location', async (ctx) => {
+    const uid = ctx.from.id;
+    const s = sessions[uid];
+    if (!s || s.step !== 'ask_address') return;
+
+    const loc = ctx.message.location;
+    s.address = `📍 Геолокация: https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
+    
+    await finishOrder(ctx, s);
 });
 
 // 💾 Камдык файлдан (menu.json) менюну калыбына келтирүү
@@ -298,11 +392,12 @@ bot.on('document', async (ctx) => {
 // ═══════════════════════════════════
 //  Заказды Админге жөнөтүү функциясы
 // ═══════════════════════════════════
-async function sendOrderToAdmin(bot, user, name, phone, items, total, source, receipt = null) {
+async function sendOrderToAdmin(bot, user, name, phone, address, items, total, source, receipt = null) {
     let msg = `🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `👤 *Аты:* ${name}\n`;
     msg += `📞 *Тел:* ${phone}\n`;
+    msg += `🚖 *Дареги:* ${address}\n`;
     msg += `🆔 *TG ID:* ${user.id}\n`;
     if (user.username) msg += `👤 *@:* @${user.username}\n`;
     msg += `📲 *Аркылуу:* ${source}\n`;

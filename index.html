@@ -565,8 +565,10 @@ function rCartBody(){
   <div class="fsec">
     <div class="flbl">👤 Атыңыз / Ваше имя</div>
     <input class="finp" id="iname" type="text" placeholder="Аты-жөнүңүз...">
-    <div class="flbl">📞 Телефон</div>
-    <input class="finp" id="iphone" type="tel" placeholder="+996 700 000 000">
+    <div class="flbl">📞 Телефон (+996сыз / без +996)</div>
+    <input class="finp" id="iphone" type="tel" placeholder="703397666">
+    <div class="flbl">🚖 Толук дарегиңиз (үй/батир) / Полный адрес (дом/кв)</div>
+    <input class="finp" id="iaddress" type="text" placeholder="Мисалы: Чүй проспектиси 120, батир 5...">
   </div>
   <button class="cfbtn" id="orderBtn" onclick="openPayment()">✅ Буюртманы Тастыктоо</button>`;
 }
@@ -691,12 +693,29 @@ function handleReceiptSelect(input) {
   });
 }
 
+function cleanPhoneNumber(val) {
+  let cleaned = val.replace(/\D/g, '');
+  if (cleaned.startsWith('996')) {
+    cleaned = cleaned.substring(3);
+  }
+  if (cleaned.startsWith('0')) {
+    cleaned = cleaned.substring(1);
+  }
+  return cleaned;
+}
+
 function openPayment() {
   const name=(document.getElementById('iname').value||'').trim();
-  const phone=(document.getElementById('iphone').value||'').trim();
+  const rawPhone=(document.getElementById('iphone').value||'').trim();
+  const phone=cleanPhoneNumber(rawPhone);
+  const address=(document.getElementById('iaddress').value||'').trim();
+  
   if(!name){toast('⚠️ Атыңызды жазыңыз!');return;}
   if(!phone){toast('⚠️ Телефонду жазыңыз!');return;}
+  if(phone.length !== 9){toast('⚠️ Телефон номерин туура жазыңыз (Мисалы: 703397666)!');return;}
+  if(!address){toast('⚠️ Толук дарегиңизди жазыңыз!');return;}
   
+  document.getElementById('iphone').value = phone;
   cls('cartOv');
   show('payOv');
 }
@@ -716,7 +735,13 @@ function dataURItoBlob(dataURI) {
 // ── ORDER → TELEGRAM ──
 async function doOrder(){
   const name=(document.getElementById('iname').value||'').trim();
-  const phone=(document.getElementById('iphone').value||'').trim();
+  const rawPhone=(document.getElementById('iphone').value||'').trim();
+  const phone=cleanPhoneNumber(rawPhone);
+  const address=(document.getElementById('iaddress').value||'').trim();
+  if(phone.length !== 9){toast('⚠️ Телефон номерин туура жазыңыз (Мисалы: 703397666)!');return;}
+  if(!address){toast('⚠️ Толук дарегиңизди жазыңыз!');return;}
+  document.getElementById('iphone').value = phone;
+  
   const items=cItems(), total=cTotal();
   const btn=document.getElementById('confirmPayBtn');
   
@@ -730,6 +755,7 @@ async function doOrder(){
   const orderData={
     name,
     phone,
+    address,
     items:items.map(i=>({name:i.n,price:i.p,qty:i.qty})),
     total,
     payment: 'MBANK (Руслан Т.)',
@@ -743,7 +769,7 @@ async function doOrder(){
 
   // 2: Bot API аркылуу түз жөнөтүү (Сүрөт катары)
   let msg=`🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n━━━━━━━━━━━━━━━━━━━━\n`;
-  msg+=`👤 *Аты:* ${name}\n📞 *Тел:* ${phone}\n`;
+  msg+=`👤 *Аты:* ${name}\n📞 *Тел:* ${phone}\n🚖 *Дареги:* ${address}\n`;
   if(tg?.initDataUnsafe?.user){const u=tg.initDataUnsafe.user;msg+=`🆔 TG: ${u.id}${u.username?' @'+u.username:''}\n`;}
   msg+=`━━━━━━━━━━━━━━━━━━━━\n📦 *БУЮРТМАЛАР:*\n`;
   items.forEach(i=>{msg+=`  • ${i.n} × ${i.qty} = *${i.p*i.qty} сом*\n`;});
