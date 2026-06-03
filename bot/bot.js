@@ -168,7 +168,7 @@ bot.action(/lang_(ky|ru)/, async (ctx) => {
 bot.on('web_app_data', async (ctx) => {
     try {
         const data = JSON.parse(ctx.webAppData.data);
-        const { name, phone, items, total } = data;
+        const { name, phone, items, total, receipt } = data;
         const u = ctx.from;
         const lang = userLanguages[u.id] || 'ky';
         const t = TRANSLATIONS[lang];
@@ -176,8 +176,8 @@ bot.on('web_app_data', async (ctx) => {
         // Кардарга жооп
         await ctx.reply(t.orderSuccess(name, phone), { parse_mode: 'Markdown' });
 
-        // Админге жөнөтүү
-        await sendOrderToAdmin(bot, u, name, phone, items, total, 'Mini App');
+        // Админге жөнөтүү (чек сүрөтү менен бирге)
+        await sendOrderToAdmin(bot, u, name, phone, items, total, 'Mini App', receipt);
     } catch(e) {
         console.error(e);
         ctx.reply('⚠️ Ката. Кайрадан аракет кылыңыз / Ошибка. Попробуйте еще раз.');
@@ -284,7 +284,7 @@ bot.on('document', async (ctx) => {
             const parsed = JSON.parse(text);
             if (Array.isArray(parsed)) {
                 fs.writeFileSync(MENU_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
-                await ctx.reply('✅ Меню ийгиликтүү калыбына келтирилди! Кардарлар жаңы менюну көрө алышат.');
+                await ctx.reply('✅ @Lazzat_beshbarmagy_kg_bot: Меню ийгиликтүү калыбына келтирилди! Кардарлар жаңы менюну көрө алышат.');
             } else {
                 await ctx.reply('❌ Ката: Файлдын ичиндеги маалымат туура эмес форматта.');
             }
@@ -298,7 +298,7 @@ bot.on('document', async (ctx) => {
 // ═══════════════════════════════════
 //  Заказды Админге жөнөтүү функциясы
 // ═══════════════════════════════════
-async function sendOrderToAdmin(bot, user, name, phone, items, total, source) {
+async function sendOrderToAdmin(bot, user, name, phone, items, total, source, receipt = null) {
     let msg = `🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `👤 *Аты:* ${name}\n`;
@@ -323,9 +323,21 @@ async function sendOrderToAdmin(bot, user, name, phone, items, total, source) {
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `🕐 ${new Date().toLocaleString('ru-RU', {timeZone:'Asia/Bishkek'})}`;
 
+    const receiptBuffer = receipt ? Buffer.from(receipt.split(',')[1], 'base64') : null;
+
     for (const chat of ADMIN_CHATS) {
         try {
-            await bot.telegram.sendMessage(chat, msg, { parse_mode: 'Markdown' });
+            if (receiptBuffer) {
+                // Чек сүрөтү бар болсо, аны сүрөт катары жөнөтөбүз
+                await bot.telegram.sendPhoto(
+                    chat, 
+                    { source: receiptBuffer }, 
+                    { caption: msg, parse_mode: 'Markdown' }
+                );
+            } else {
+                // Болбосо жөнөкөй текст жөнөтөбүз
+                await bot.telegram.sendMessage(chat, msg, { parse_mode: 'Markdown' });
+            }
         } catch(e) {
             console.error(`Failed to send order to chat ${chat}:`, e.message);
         }
@@ -333,11 +345,15 @@ async function sendOrderToAdmin(bot, user, name, phone, items, total, source) {
 }
 
 const MENU_FILE = path.join(__dirname, 'menu.json');
+const secretPath = `/telegraf/${bot.secretPathComponent()}`;
+const botMiddleware = bot.webhookCallback(secretPath);
 
 // ═══════════════════════════════════
 //  Иштетүү
 // ═══════════════════════════════════
-bot.launch().then(async () => {
+const domain = process.env.RENDER_EXTERNAL_URL;
+
+async function onStart() {
     console.log('');
     console.log('✅ ══════════════════════════════');
     console.log('✅  @Lazzat_beshbarmagy_kg_bot');
@@ -358,10 +374,26 @@ bot.launch().then(async () => {
             console.error('Failed to send restart notice to admin:', err.message);
         }
     }
-}).catch(err => {
-    console.error('❌ КАТА:', err.message);
-    process.exit(1);
-});
+}
+
+if (domain) {
+    // Render серверинде webhook режимин орнотобуз
+    bot.telegram.setWebhook(`${domain}${secretPath}`).then(() => {
+        console.log(`Webhook successfully configured at: ${domain}${secretPath}`);
+        onStart();
+    }).catch(err => {
+        console.error('❌ WEBHOOK ОРНОТУУ КАТАСЫ:', err.message);
+    });
+} else {
+    // Локалдык иштетүүдө polling (long-polling) колдонобуз
+    bot.launch().then(() => {
+        console.log('Bot started locally using long-polling.');
+        onStart();
+    }).catch(err => {
+        console.error('❌ КАТА:', err.message);
+        process.exit(1);
+    });
+}
 
 // Render'де акысыз Web Service катары иштөө жана меню сактоо/жүктөө үчүн сервер
 const http = require('http');
@@ -374,6 +406,11 @@ const server = http.createServer((req, res) => {
         res.writeHead(200);
         res.end();
         return;
+    }
+
+    // Webhook үчүн Telegraf'ка беребиз
+    if (req.method === 'POST' && req.url === secretPath) {
+        return botMiddleware(req, res);
     }
 
     if (req.method === 'GET' && req.url === '/api/menu') {

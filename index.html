@@ -212,9 +212,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         </div>
       </div>
       
+      <!-- RECEIPT UPLOAD -->
+      <div style="font-size:11px; font-weight:800; color:var(--brown2); margin-bottom:6px">📁 Төлөмдүн чегин (скриншот) жүктөңүз / Загрузите чек оплаты:</div>
+      <input class="finp" id="receiptFileInput" type="file" accept="image/*" style="display:none" onchange="handleReceiptSelect(this)">
+      <button onclick="document.getElementById('receiptFileInput').click()" style="width:100%;padding:10px;background:var(--brown);color:var(--gold2);border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-bottom:12px;font-family:'Nunito',sans-serif">📁 Галереядан чекти тандоо</button>
+      <img id="receiptPreview" src="" style="width:100%;height:140px;object-fit:contain;border-radius:8px;display:none;margin-bottom:12px;background:#ede4d3;border:1px solid var(--border)">
+
       <div style="font-size:12px; color:var(--red); font-weight:800; margin-bottom:15px; line-height:1.4">
-        ⚠️ Которгондон кийин гана "Төлөдүм" баскычын басыңыз!<br>
-        ⚠️ Нажимайте кнопку только после перевода денег!
+        ⚠️ Которгондон кийин жана чегин жүктөгөндөн кийин гана "Төлөдүм" баскычын басыңыз!<br>
+        ⚠️ Нажимайте кнопку только после перевода денег и загрузки чека!
       </div>
       
       <button class="cfbtn" id="confirmPayBtn" onclick="doOrder()" style="width:100%; margin:0">✅ Төлөдүм / Оплатил</button>
@@ -233,7 +239,7 @@ if(tg){ tg.expand(); tg.enableClosingConfirmation(); }
 
 const BOT_TOKEN = '8826341236:AAEglwZ4U-Neam7q5RWhWlCJFoi8ykkccn0';
 const ADMIN_ID  = '8054282752';
-const ADMIN_PIN = '1234'; // PIN кодду өзгөртсөңүз болот
+const ADMIN_PIN = '2558'; // PIN кодду өзгөртсөңүз болот
 
 // ═══════════════════════════════════
 //  CATEGORIES
@@ -667,6 +673,24 @@ function compressImage(file, callback) {
 }
 
 // ── CART & PAYMENT FLOW ──
+let uploadedReceiptBase64 = '';
+
+function handleReceiptSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  toast('⏳ Чек иштетилип жатат...');
+  compressImage(file, function(dataUrl) {
+    uploadedReceiptBase64 = dataUrl;
+    const preview = document.getElementById('receiptPreview');
+    if (preview) {
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+    }
+    toast('✅ Чек жүктөлдү!');
+  });
+}
+
 function openPayment() {
   const name=(document.getElementById('iname').value||'').trim();
   const phone=(document.getElementById('iphone').value||'').trim();
@@ -677,12 +701,30 @@ function openPayment() {
   show('payOv');
 }
 
+// Base64'тү Blob'ко айландыруу функциясы (жекече жөнөтүү үчүн)
+function dataURItoBlob(dataURI) {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], {type: mimeString});
+}
+
 // ── ORDER → TELEGRAM ──
 async function doOrder(){
   const name=(document.getElementById('iname').value||'').trim();
   const phone=(document.getElementById('iphone').value||'').trim();
   const items=cItems(), total=cTotal();
   const btn=document.getElementById('confirmPayBtn');
+  
+  if (!uploadedReceiptBase64) {
+    toast('⚠️ Төлөмдүн чегин (скриншот) жүктөңүз!');
+    return;
+  }
+
   if(btn){btn.disabled=true;btn.textContent='⏳ Жөнөтүлүүдө...';}
 
   const orderData={
@@ -690,7 +732,8 @@ async function doOrder(){
     phone,
     items:items.map(i=>({name:i.n,price:i.p,qty:i.qty})),
     total,
-    payment: 'MBANK (Руслан Т.)'
+    payment: 'MBANK (Руслан Т.)',
+    receipt: uploadedReceiptBase64
   };
 
   // 1: Telegram sendData (Mini App аркылуу)
@@ -698,7 +741,7 @@ async function doOrder(){
     try{ tg.sendData(JSON.stringify(orderData)); onSuccess(); return; }catch(e){}
   }
 
-  // 2: Bot API аркылуу
+  // 2: Bot API аркылуу түз жөнөтүү (Сүрөт катары)
   let msg=`🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n━━━━━━━━━━━━━━━━━━━━\n`;
   msg+=`👤 *Аты:* ${name}\n📞 *Тел:* ${phone}\n`;
   if(tg?.initDataUnsafe?.user){const u=tg.initDataUnsafe.user;msg+=`🆔 TG: ${u.id}${u.username?' @'+u.username:''}\n`;}
@@ -709,9 +752,15 @@ async function doOrder(){
   msg+=`━━━━━━━━━━━━━━━━━━━━\n🕐 ${new Date().toLocaleString('ru-RU',{timeZone:'Asia/Bishkek'})}`;
 
   try{
-    const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:ADMIN_ID,text:msg,parse_mode:'Markdown'})
+    const formData = new FormData();
+    formData.append('chat_id', ADMIN_ID);
+    formData.append('photo', dataURItoBlob(uploadedReceiptBase64), 'receipt.jpg');
+    formData.append('caption', msg);
+    formData.append('parse_mode', 'Markdown');
+
+    const r=await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+      method:'POST',
+      body:formData
     });
     const d=await r.json();
     if(d.ok){onSuccess();}else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}}
@@ -724,6 +773,12 @@ function onSuccess(){
   cart={};syncBar();
   cls('payOv');
   rMenu();
+  
+  // Чек маалыматын өчүрөбүз
+  uploadedReceiptBase64 = '';
+  const preview = document.getElementById('receiptPreview');
+  if (preview) preview.style.display = 'none';
+
   toast('🎉 Буюртмаңыз кабыл алынды! Рахмат!');
   if(tg) setTimeout(()=>tg.close(),1800);
 }
