@@ -481,11 +481,16 @@ if (domain) {
     });
 } else {
     // Локалдык иштетүүдө polling (long-polling) колдонобуз
-    bot.launch().then(() => {
-        console.log('Bot started locally using long-polling.');
-        onStart();
+    bot.telegram.deleteWebhook().then(() => {
+        bot.launch().then(() => {
+            console.log('Bot started locally using long-polling.');
+            onStart();
+        }).catch(err => {
+            console.error('❌ КАТА:', err.message);
+            process.exit(1);
+        });
     }).catch(err => {
-        console.error('❌ КАТА:', err.message);
+        console.error('❌ WEBHOOK ӨЧҮРҮҮ КАТАСЫ:', err.message);
         process.exit(1);
     });
 }
