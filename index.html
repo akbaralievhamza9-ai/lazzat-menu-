@@ -818,16 +818,16 @@ async function doOrder(){
          const customerId = tg.initDataUnsafe.user.id;
          const isRu = (tg.initDataUnsafe.user.language_code === 'ru');
          let successMsg = isRu 
-            ? `🎉 *Уважаемый(ая) ${name}, ваш заказ успешно принят!* \n\n⏱ Блюдо будет готово за *15-25 минут*!\n🚖 Время доставки: от *30 до 55 минут*.\n\n`
-            : `🎉 *Урматтуу ${name}, буюртмаңыз ийгиликтүү кабыл алынды!* \n\n⏱ Тамагыңыз *15-25 мүнөттө* даяр болот!\n🚖 Жеткирүү убактысы: *30-55 мүнөт* аралыгында.\n\n`;
+            ? `🎉 <b>Уважаемый(ая) ${name}, ваш заказ успешно принят!</b>\n\n⏱ Блюдо будет готово за <b>15-25 минут</b>!\n🚖 Время доставки: от <b>30 до 55 минут</b>.\n\n`
+            : `🎉 <b>Урматтуу ${name}, буюртмаңыз ийгиликтүү кабыл алынды!</b>\n\n⏱ Тамагыңыз <b>15-25 мүнөттө</b> даяр болот!\n🚖 Жеткирүү убактысы: <b>30-55 мүнөт</b> аралыгында.\n\n`;
             
-         successMsg += `📦 *${isRu ? 'ВАШ ЗАКАЗ' : 'БУЮРТМАЛАР'}:*\n`;
+         successMsg += `📦 <b>${isRu ? 'ВАШ ЗАКАЗ' : 'БУЮРТМАЛАР'}:</b>\n`;
          items.forEach(i => {
-             successMsg += `  • ${i.n} × ${i.qty} = *${i.p * i.qty} сом*\n`;
+             successMsg += `  • ${i.n} × ${i.qty} = <b>${i.p * i.qty} сом</b>\n`;
          });
          successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
-         successMsg += `💵 *${isRu ? 'ИТОГО' : 'ЖАЛПЫ'}: ${total} сом*\n`;
-         successMsg += `🚖 *${isRu ? 'Адрес доставки' : 'Жеткирүү дареги'}:* ${address}\n\n`;
+         successMsg += `💵 <b>${isRu ? 'ИТОГО' : 'ЖАЛПЫ'}: ${total} сом</b>\n`;
+         successMsg += `🚖 <b>${isRu ? 'Адрес доставки' : 'Жеткирүү дареги'}:</b> ${address}\n\n`;
          successMsg += isRu 
             ? `Приятного аппетита! Искренне благодарим вас за выбор нашего ресторана! 💖\n📞 По всем вопросам: @Lazzat_beshbarmagy`
             : `Даамдуу тамактанууну каалайбыз! Бизди тандаганыңыз үчүн терең ыраазычылык билдиребиз! 💖\n📞 Суроолор боюнча: @Lazzat_beshbarmagy`;
@@ -839,7 +839,7 @@ async function doOrder(){
              body: JSON.stringify({
                chat_id: customerId,
                text: successMsg,
-               parse_mode: 'Markdown'
+               parse_mode: 'HTML'
              })
            });
          } catch(err) {
