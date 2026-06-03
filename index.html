@@ -567,8 +567,11 @@ function rCartBody(){
     <input class="finp" id="iname" type="text" placeholder="Аты-жөнүңүз...">
     <div class="flbl">📞 Телефон (+996сыз / без +996)</div>
     <input class="finp" id="iphone" type="tel" placeholder="703397666">
-    <div class="flbl">🚖 Толук дарегиңиз (үй/батир) / Полный адрес (дом/кв)</div>
+    <div class="flbl">🚖 Толук дарек / Полный адрес</div>
     <input class="finp" id="iaddress" type="text" placeholder="Мисалы: Чүй проспектиси 120, батир 5...">
+    <button type="button" onclick="detectLocation()" style="width:100%;padding:9px;background:#ede4d3;color:var(--brown);border:1.5px solid var(--border);border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;margin-bottom:8px;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">
+      📍 Учурдагы жайгашкан жерди аныктоо / Определить геолокацию
+    </button>
   </div>
   <button class="cfbtn" id="orderBtn" onclick="openPayment()">✅ Буюртманы Тастыктоо</button>`;
 }
@@ -702,6 +705,27 @@ function cleanPhoneNumber(val) {
     cleaned = cleaned.substring(1);
   }
   return cleaned;
+}
+
+function detectLocation() {
+  if (!navigator.geolocation) {
+    toast('⚠️ Геолокация иштебейт!');
+    return;
+  }
+  toast('⏳ Жайгашкан жер аныкталууда...');
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      document.getElementById('iaddress').value = `📍 Геолокация: https://maps.google.com/?q=${lat},${lng}`;
+      toast('✅ Геолокация сакталды!');
+    },
+    function(error) {
+      console.error(error);
+      toast('⚠️ Геолокация аныкталган жок!');
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
 }
 
 function openPayment() {
