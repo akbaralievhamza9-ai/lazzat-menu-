@@ -813,7 +813,41 @@ async function doOrder(){
       body:formData
     });
     const d=await r.json();
-    if(d.ok){onSuccess();}else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}}
+    if(d.ok){
+      if(tg?.initDataUnsafe?.user?.id) {
+         const customerId = tg.initDataUnsafe.user.id;
+         const isRu = (tg.initDataUnsafe.user.language_code === 'ru');
+         let successMsg = isRu 
+            ? `🎉 *Уважаемый(ая) ${name}, ваш заказ успешно принят!* \n\n⏱ Блюдо будет готово за *15-25 минут*!\n🚖 Время доставки: от *30 до 55 минут*.\n\n`
+            : `🎉 *Урматтуу ${name}, буюртмаңыз ийгиликтүү кабыл алынды!* \n\n⏱ Тамагыңыз *15-25 мүнөттө* даяр болот!\n🚖 Жеткирүү убактысы: *30-55 мүнөт* аралыгында.\n\n`;
+            
+         successMsg += `📦 *${isRu ? 'ВАШ ЗАКАЗ' : 'БУЮРТМАЛАР'}:*\n`;
+         items.forEach(i => {
+             successMsg += `  • ${i.n} × ${i.qty} = *${i.p * i.qty} сом*\n`;
+         });
+         successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
+         successMsg += `💵 *${isRu ? 'ИТОГО' : 'ЖАЛПЫ'}: ${total} сом*\n`;
+         successMsg += `🚖 *${isRu ? 'Адрес доставки' : 'Жеткирүү дареги'}:* ${address}\n\n`;
+         successMsg += isRu 
+            ? `Приятного аппетита! Искренне благодарим вас за выбор нашего ресторана! 💖\n📞 По всем вопросам: @Lazzat_beshbarmagy`
+            : `Даамдуу тамактанууну каалайбыз! Бизди тандаганыңыз үчүн терең ыраазычылык билдиребиз! 💖\n📞 Суроолор боюнча: @Lazzat_beshbarmagy`;
+
+         try {
+           await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               chat_id: customerId,
+               text: successMsg,
+               parse_mode: 'Markdown'
+             })
+           });
+         } catch(err) {
+           console.error("Failed to send customer confirmation:", err);
+         }
+      }
+      onSuccess();
+    }else{toast('⚠️ Ката: '+d.description);if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}}
   }catch(e){
     toast('⚠️ Интернет байланышы жок!');
     if(btn){btn.disabled=false;btn.textContent='✅ Төлөдүм / Оплатил';}
