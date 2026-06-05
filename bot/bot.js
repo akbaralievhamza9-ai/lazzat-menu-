@@ -26,6 +26,11 @@ function cleanPhoneNumber(phone) {
     return cleaned;
 }
 
+function escapeMarkdown(str) {
+    if (!str) return '';
+    return String(str).replace(/[_*`\[]/g, '\\$&');
+}
+
 async function finishOrder(ctx, s) {
     const uid = ctx.from.id;
     const lang = userLanguages[uid] || 'ky';
@@ -39,11 +44,11 @@ async function finishOrder(ctx, s) {
         [t.changeLanguage]
     ]).resize();
 
-    let successMsg = t.orderSuccess(s.name, s.phone);
+    let successMsg = t.orderSuccess(escapeMarkdown(s.name), escapeMarkdown(s.phone));
     successMsg += `\n\n📦 *${lang === 'ky' ? 'БУЮРТМАЛАР' : 'ВАШ ЗАКАЗ'}:*\n`;
-    successMsg += `  • ${s.orderText}\n`;
+    successMsg += `  • ${escapeMarkdown(s.orderText)}\n`;
     successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
-    successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${s.address}\n`;
+    successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${escapeMarkdown(s.address)}\n`;
 
     await ctx.reply(successMsg, { 
         parse_mode: 'Markdown',
@@ -215,18 +220,18 @@ bot.on('web_app_data', async (ctx) => {
         const lang = userLanguages[u.id] || 'ky';
         const t = TRANSLATIONS[lang];
 
-        let successMsg = t.orderSuccess(name, phone);
+        let successMsg = t.orderSuccess(escapeMarkdown(name), escapeMarkdown(phone));
         successMsg += `\n\n📦 *${lang === 'ky' ? 'БУЮРТМАЛАР' : 'ВАШ ЗАКАЗ'}:*\n`;
         items.forEach(i => {
             if (i.price > 0) {
-                successMsg += `  • ${i.name} × ${i.qty} = *${i.price * i.qty} сом*\n`;
+                successMsg += `  • ${escapeMarkdown(i.name)} × ${i.qty} = *${i.price * i.qty} сом*\n`;
             } else {
-                successMsg += `  • ${i.name}\n`;
+                successMsg += `  • ${escapeMarkdown(i.name)}\n`;
             }
         });
         successMsg += `━━━━━━━━━━━━━━━━━━━━\n`;
-        if (total !== '—') successMsg += `💵 *${lang === 'ky' ? 'ЖАЛПЫ' : 'ИТОГО'}: ${total} сом*\n`;
-        successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${address}\n`;
+        if (total !== '—') successMsg += `💵 *${lang === 'ky' ? 'ЖАЛПЫ' : 'ИТОГО'}: ${escapeMarkdown(total)} сом*\n`;
+        successMsg += `🚖 *${lang === 'ky' ? 'Жеткирүү дареги' : 'Адрес доставки'}:* ${escapeMarkdown(address)}\n`;
 
         // Кардарга жооп
         await ctx.reply(successMsg, { parse_mode: 'Markdown' });
@@ -408,31 +413,39 @@ bot.on('document', async (ctx) => {
     }
 });
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // ═══════════════════════════════════
 //  Заказды Админге жөнөтүү функциясы
 // ═══════════════════════════════════
 async function sendOrderToAdmin(bot, user, name, phone, address, items, total, source, receipt = null) {
-    let msg = `🚨 *ЖАҢЫ БУЮРТМА!* 🚨\n`;
+    let msg = `🚨 <b>ЖАҢЫ БУЮРТМА!</b> 🚨\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `👤 *Аты:* ${name}\n`;
-    msg += `📞 *Тел:* ${phone}\n`;
-    msg += `🚖 *Дареги:* ${address}\n`;
-    msg += `🆔 *TG ID:* ${user.id}\n`;
-    if (user.username) msg += `👤 *@:* @${user.username}\n`;
-    msg += `📲 *Аркылуу:* ${source}\n`;
+    msg += `👤 <b>Аты:</b> ${escapeHTML(name)}\n`;
+    msg += `📞 <b>Тел:</b> ${escapeHTML(phone)}\n`;
+    msg += `🚖 <b>Дареги:</b> ${escapeHTML(address)}\n`;
+    msg += `🆔 <b>TG ID:</b> <code>${user.id}</code>\n`;
+    if (user.username) msg += `👤 <b>@:</b> @${escapeHTML(user.username)}\n`;
+    msg += `📲 <b>Аркылуу:</b> ${escapeHTML(source)}\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `📦 *БУЮРТМАЛАР:*\n`;
+    msg += `📦 <b>БУЮРТМАЛАР:</b>\n`;
     items.forEach(i => {
         if (i.price > 0) {
-            msg += `  • ${i.name} × ${i.qty} = *${i.price * i.qty} сом*\n`;
+            msg += `  • ${escapeHTML(i.name)} × ${i.qty} = <b>${i.price * i.qty} сом</b>\n`;
         } else {
-            msg += `  • ${i.name}\n`;
+            msg += `  • ${escapeHTML(i.name)}\n`;
         }
     });
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (total !== '—') msg += `💵 *ЖАЛПЫ: ${total} сом*\n`;
+    if (total !== '—') msg += `💵 <b>ЖАЛПЫ: ${total} сом</b>\n`;
     if (source === 'Mini App') {
-        msg += `💳 *Төлөм:* МБАНК аркылуу которулду\n`;
+        msg += `💳 <b>Төлөм:</b> МБАНК аркылуу которулду\n`;
     }
     msg += `━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `🕐 ${new Date().toLocaleString('ru-RU', {timeZone:'Asia/Bishkek'})}`;
@@ -446,11 +459,11 @@ async function sendOrderToAdmin(bot, user, name, phone, address, items, total, s
                 await bot.telegram.sendPhoto(
                     chat, 
                     { source: receiptBuffer }, 
-                    { caption: msg, parse_mode: 'Markdown' }
+                    { caption: msg, parse_mode: 'HTML' }
                 );
             } else {
                 // Болбосо жөнөкөй текст жөнөтөбүз
-                await bot.telegram.sendMessage(chat, msg, { parse_mode: 'Markdown' });
+                await bot.telegram.sendMessage(chat, msg, { parse_mode: 'HTML' });
             }
         } catch(e) {
             console.error(`Failed to send order to chat ${chat}:`, e.message);
