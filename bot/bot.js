@@ -3,7 +3,7 @@ const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 
-const BOT_TOKEN  = '8826341236:AAEglwZ4U-Neam7q5RWhWlCJFoi8ykkccn0';
+const BOT_TOKEN  = '8826341236:AAHMxdrUd19qnv6qK4SnI8eVQiK0UK11H6g';
 const ADMIN_CHATS = ['8054282752', '@lazzt_beshbarmagy'];
 const WEBAPP_URL = 'https://akbaralievhamza9-ai.github.io/lazzat-menu-/';
 
