@@ -1,9 +1,9 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 
-const BOT_TOKEN  = '8826341236:AAHMxdrUd19qnv6qK4SnI8eVQiK0UK11H6g';
+const BOT_TOKEN  = '8826341236:AAGcEaS-eW1zJFziKL2JO8EGwmfLhw5Rcdw';
 const ADMIN_CHATS = ['8054282752', '@lazzt_beshbarmagy'];
 const WEBAPP_URL = 'https://akbaralievhamza9-ai.github.io/lazzat-menu-/';
 
@@ -606,3 +606,4 @@ server.listen(PORT, () => {
 
 process.once('SIGINT',  () => { bot.stop('SIGINT'); server.close(); });
 process.once('SIGTERM', () => { bot.stop('SIGTERM'); server.close(); });
+
