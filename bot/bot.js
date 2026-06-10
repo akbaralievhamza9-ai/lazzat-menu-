@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
@@ -468,6 +468,34 @@ async function sendOrderToAdmin(bot, user, name, phone, address, items, total, s
         } catch(e) {
             console.error(`Failed to send order to chat ${chat}:`, e.message);
         }
+    }
+
+    // 🖨️ ПРИНТЕРГЕ ЧЕК БАСЫП ЧЫГАРУУ (st max — 192.168.0.12)
+    try {
+        const itemsText = items.map(i => {
+            if (i.price > 0) return `${i.name} x${i.qty} = ${i.price * i.qty} сом`;
+            return i.name;
+        }).join(', ');
+
+        const printRes = await fetch('http://192.168.0.12:5000/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer_name: name,
+                phone: phone,
+                address: address,
+                items: itemsText,
+                total_price: total !== '—' ? Number(total) || 0 : 0,
+                source: source
+            })
+        });
+        if (printRes.ok) {
+            console.log('🖨️ ✅ Буюртма принтер серверине жөнөтүлдү — чек басылып чыкты!');
+        } else {
+            console.error('🖨️ ❌ Принтер серверинен ката:', printRes.status);
+        }
+    } catch(e) {
+        console.error('🖨️ ❌ Принтер серверине (192.168.0.12:5000) туташуу мүмкүн эмес:', e.message);
     }
 }
 
